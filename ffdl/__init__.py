@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # coding=utf-8
 
 import re
@@ -7,7 +6,6 @@ import uuid
 from datetime import date
 from urllib.parse import urlparse
 
-import click
 import iso639
 import requests as r
 from bs4 import BeautifulSoup
@@ -113,7 +111,7 @@ class Story(object):
             )
 
         for index, chapter in enumerate(self.chapter_titles):
-            chapter_url = self.chapter_url.format(index + 1)
+            chapter_url = self.chapter_url.format(str(index + 1))
             header = "<h1>" + chapter + "</h1>"
             story = header + self.get_story(r.get(chapter_url))
             _chapter = epub.EpubHtml(
@@ -127,7 +125,6 @@ class Story(object):
         book.toc = (x for x in self.chapters)
 
         book.add_item(epub.EpubNcx())
-        # book.add_item(epub.EpubNav())
 
         template = Template(filename="nav.mako")
 
@@ -150,13 +147,3 @@ class Story(object):
 
         epub.write_epub('{author} - {title}.epub'.format(author=self.author, title=self.title), book, {})
 
-
-@click.command()
-@click.argument("url")
-def cli(url: str):
-    story = Story(url)
-    story.make_ebook()
-
-
-if __name__ == '__main__':
-    cli()
