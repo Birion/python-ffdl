@@ -26,6 +26,7 @@ class Story(object):
         self.chapter_url = str
         self.complete = False
         self.published = date
+        self.updated = date
         self.category = str
         self.genre = str
         self.words = int
@@ -88,7 +89,7 @@ class Story(object):
         self.category = self.main_page.find(id="pre_story_links").find("a").string
         self.genre = _data2[1]
         self.words = int(_data2[-2].split()[-1].replace(",", ""))
-        self.published = date(_year, _month, _day)
+        self.updated = date(_year, _month, _day)
         self.lang = iso639.to_iso639_1(_data2[0])
         self.complete = "Complete" in _data[-1]
 
