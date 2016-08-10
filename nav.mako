@@ -19,7 +19,9 @@
 
     <div><strong>Author URL:</strong> <a href="${story.author_url}">${story.author_url}</a></div>
 
-    <div><strong>Published:</strong> ${story.published.isoformat()}</div>
+##    <div><strong>Published:</strong> ${story.published.isoformat()}</div>
+
+    <div><strong>Updated:</strong> ${story.updated.isoformat()}</div>
 
     <div><strong>Updated:</strong> ${story.updated.isoformat()}</div>
 
