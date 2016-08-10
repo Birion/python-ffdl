@@ -21,6 +21,8 @@
 
     <div><strong>Published:</strong> ${story.published.isoformat()}</div>
 
+    <div><strong>Updated:</strong> ${story.updated.isoformat()}</div>
+
     <div><strong>Downloaded:</strong> ${datetime.now()}</div>
 
     <div><strong>Words:</strong> ${story.words}</div>

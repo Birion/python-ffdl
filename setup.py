@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="python-ffdl",
     version="0.0.1dev1",
-    py_modules=["main"],
+    py_modules=["pyffdl"],
     packages=["ffdl"],
     include_package_data=True,
     url="https://github.com/Birion/python-ffdl",
@@ -28,7 +28,7 @@ setup(
     ],
     entry_points="""
         [console_scripts]
-        ffdl.py=ffdl:cli
+        pyffdl=pyffdl:cli
     """,
     package_data={
         "": ["nav.mako", "style.css"],

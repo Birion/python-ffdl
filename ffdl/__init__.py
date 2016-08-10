@@ -13,6 +13,33 @@ from ebooklib import epub
 from mako.template import Template
 
 
+def dictionarise(data):
+    """
+    Transform a list with fic data into a dictionary.
+    """
+    dic = {}
+    key, val = None, None
+    for index, i in enumerate(data):
+        if ":" in i:
+            _ = [x.strip() for x in i.split(":")]
+            key = _[0]
+            val = _[1]
+        else:
+            if index == 1:
+                key = "Language"
+                val = i
+            if index == 2:
+                key = "Genre"
+                val = i
+        dic[key] = val
+
+    return dic
+
+
+def is_in_dictionary(dic, key):
+    return dic[key] if key in dic.keys() else None
+
+
 class Story(object):
     def __init__(self, url):
         super(Story, self).__init__()
@@ -26,6 +53,7 @@ class Story(object):
         self.chapter_url = str
         self.complete = False
         self.published = date
+        self.updated = date
         self.category = str
         self.genre = str
         self.words = int
@@ -76,21 +104,40 @@ class Story(object):
         """
         _header = self.main_page.find(id="profile_top")
         _author = _header.find("a", href=re.compile(r"^/u/\d+/"))
-        _data = [x for x in _header.find(class_="xgray").stripped_strings]
-        _month, _day, _year = [int(x) for x in _data[-2].split("/")]
-        _data2 = [x.strip() for x in _data[2].split("- ") if x]
+        _data = dictionarise(
+            [x.strip() for x in " ".join([x for x in _header.find(class_="xgray").stripped_strings]).split("-")])
+
+        print(_data)
+
+        published = is_in_dictionary(_data, "Published")
+        updated = is_in_dictionary(_data, "Updated")
+
+        pub_day = 1
+        pub_month = 1
+        pub_year = 1970
+        up_day = 1
+        up_month = 1
+        up_year = 1970
+
+        if published:
+            pub_month, pub_day, pub_year = [int(x) for x in published.split("/")]
+        if updated:
+            up_month, up_day, up_year = [int(x) for x in updated.split("/")]
+
+        words = is_in_dictionary(_data, "Words")
 
         self.title = _header.find("b").string
         self.author = _author.string
         self.author_url = self.combine_url(_author["href"])
         self.summary = _header.find("div", class_="xcontrast_txt").string
-        self.rating = _data[1].split()[-1]
+        self.rating = is_in_dictionary(_data, "Rated")
         self.category = self.main_page.find(id="pre_story_links").find("a").string
-        self.genre = _data2[1]
-        self.words = int(_data2[-2].split()[-1].replace(",", ""))
-        self.published = date(_year, _month, _day)
-        self.lang = iso639.to_iso639_1(_data2[0])
-        self.complete = "Complete" in _data[-1]
+        self.genre = is_in_dictionary(_data, "Genre")
+        self.words = int(words.replace(",", ""))
+        self.published = date(pub_year, pub_month, pub_day)
+        self.updated = date(up_year, up_month, up_day)
+        self.lang = iso639.to_iso639_1(is_in_dictionary(_data, "Language"))
+        self.complete = is_in_dictionary(_data, "Status")
 
     def make_ebook(self):
         """
@@ -146,4 +193,3 @@ class Story(object):
             book.spine.append(c)
 
         epub.write_epub('{author} - {title}.epub'.format(author=self.author, title=self.title), book, {})
-

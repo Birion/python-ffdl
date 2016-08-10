@@ -3,4 +3,4 @@ Fanfiction downloader
 
 ## Usage
 
-`python-ffdl.py <URL>`
+`pyffdl.py <URL>`
