@@ -1,2 +1,2 @@
-include nav.mako
-include style.css
+include ffdl/nav.mako
+include ffdl/style.css

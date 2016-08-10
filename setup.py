@@ -1,8 +1,10 @@
+# coding=utf-8
+
 from setuptools import setup
 
 setup(
-    name="python-ffdl",
-    version="0.0.1dev1",
+    name="pyffdl",
+    version="0.0.1.dev2",
     py_modules=["pyffdl"],
     packages=["ffdl"],
     include_package_data=True,
@@ -24,7 +26,7 @@ setup(
         "beautifulsoup4",
         "ebooklib",
         "mako",
-        "html5lib"
+        "html5lib==0.999"
     ],
     entry_points="""
         [console_scripts]

@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import os.path
 import re
 import sys
 import uuid
@@ -120,9 +121,15 @@ class Story(object):
         up_year = 1970
 
         if published:
-            pub_month, pub_day, pub_year = [int(x) for x in published.split("/")]
+            pubd = [int(x) for x in published.split("/")]
+            if len(pubd) == 2:
+                pubd.append(date.today().year)
+            pub_month, pub_day, pub_year = pubd
         if updated:
-            up_month, up_day, up_year = [int(x) for x in updated.split("/")]
+            upd = [int(x) for x in updated.split("/")]
+            if len(upd) == 2:
+                upd.append(date.today().year)
+            up_month, up_day, up_year = upd
 
         words = is_in_dictionary(_data, "Words")
 
@@ -149,7 +156,7 @@ class Story(object):
         book.set_language(self.lang)
         book.add_author(self.author)
 
-        with open("style.css") as fp:
+        with open(os.path.join(os.path.dirname(__file__), "style.css")) as fp:
             css = epub.EpubItem(
                 uid="style",
                 file_name="style/style.css",
@@ -173,7 +180,7 @@ class Story(object):
 
         book.add_item(epub.EpubNcx())
 
-        template = Template(filename="nav.mako")
+        template = Template(filename=os.path.join(os.path.dirname(__file__), "nav.mako"))
 
         nav = epub.EpubHtml(
             title=self.title,
@@ -192,4 +199,6 @@ class Story(object):
             book.add_item(c)
             book.spine.append(c)
 
-        epub.write_epub('{author} - {title}.epub'.format(author=self.author, title=self.title), book, {})
+        epub.write_epub(
+            '{author} - {title}.epub'.format(author=self.author, title=re.sub(r"[:/]", "_", self.title)), book, {}
+        )
