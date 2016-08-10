@@ -11,10 +11,10 @@ p {
 }
 
 div > p:nth-of-type(1) {
-    text-indent: 0em;
+    text-indent: 0;
 }
 
-h1 {
+h1, h2, h3 {
     font-variant: small-caps;
     text-align: center;
 }
