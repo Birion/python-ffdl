@@ -194,6 +194,8 @@ class Story(object):
                 story=self
             )
         )
+        nav.add_item(css)
+
         book.add_item(nav)
 
         book.add_item(css)
