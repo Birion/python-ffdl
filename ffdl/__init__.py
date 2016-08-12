@@ -37,7 +37,7 @@ def dictionarise(data):
     return dic
 
 
-def is_in_dictionary(dic, key):
+def in_dictionary(dic, key):
     return dic[key] if key in dic.keys() else None
 
 
@@ -106,12 +106,12 @@ class Story(object):
         _header = self.main_page.find(id="profile_top")
         _author = _header.find("a", href=re.compile(r"^/u/\d+/"))
         _data = dictionarise(
-            [x.strip() for x in " ".join([x for x in _header.find(class_="xgray").stripped_strings]).split("-")])
+            [x.strip() for x in " ".join([x for x in _header.find(class_="xgray").stripped_strings]).split(" - ")])
 
         print(_data)
 
-        published = is_in_dictionary(_data, "Published")
-        updated = is_in_dictionary(_data, "Updated")
+        published = in_dictionary(_data, "Published")
+        updated = in_dictionary(_data, "Updated")
 
         pub_day = 1
         pub_month = 1
@@ -131,20 +131,20 @@ class Story(object):
                 upd.append(date.today().year)
             up_month, up_day, up_year = upd
 
-        words = is_in_dictionary(_data, "Words")
+        words = in_dictionary(_data, "Words")
 
         self.title = _header.find("b").string
         self.author = _author.string
         self.author_url = self.combine_url(_author["href"])
         self.summary = _header.find("div", class_="xcontrast_txt").string
-        self.rating = is_in_dictionary(_data, "Rated")
+        self.rating = in_dictionary(_data, "Rated")
         self.category = self.main_page.find(id="pre_story_links").find("a").string
-        self.genre = is_in_dictionary(_data, "Genre")
+        self.genre = in_dictionary(_data, "Genre")
         self.words = int(words.replace(",", ""))
         self.published = date(pub_year, pub_month, pub_day)
         self.updated = date(up_year, up_month, up_day)
-        self.lang = iso639.to_iso639_1(is_in_dictionary(_data, "Language"))
-        self.complete = is_in_dictionary(_data, "Status")
+        self.lang = iso639.to_iso639_1(in_dictionary(_data, "Language"))
+        self.complete = in_dictionary(_data, "Status")
 
     def make_ebook(self):
         """
@@ -164,13 +164,17 @@ class Story(object):
                 content=fp.read()
             )
 
+        chap_padding = len(str(len(self.chapters))) if len(str(len(self.chapters))) > 2 else 2
+
         for index, chapter in enumerate(self.chapter_titles):
             chapter_url = self.chapter_url.format(str(index + 1))
             header = "<h1>" + chapter + "</h1>"
             story = header + self.get_story(r.get(chapter_url))
+            chapter_number = str(index + 1).zfill(chap_padding)
+            print("Downloading chapter " + chapter_number + " - " + chapter)
             _chapter = epub.EpubHtml(
                 title=chapter,
-                file_name="chapter_{}.xhtml".format(str(index + 1).zfill(2)),
+                file_name="chapter_{}.xhtml".format(chapter_number),
                 content=story
             )
             _chapter.add_item(css)
