@@ -121,15 +121,21 @@ class Story(object):
         up_year = 1970
 
         if published:
-            pubd = [int(x) for x in published.split("/")]
-            if len(pubd) == 2:
-                pubd.append(date.today().year)
-            pub_month, pub_day, pub_year = pubd
+            if "m" in published or "h" in published:
+                pub_month, pub_day, pub_year = (date.today().month, date.today().day, date.today().year)
+            else:
+                pubd = [int(x) for x in published.split("/")]
+                if len(pubd) == 2:
+                    pubd.append(date.today().year)
+                pub_month, pub_day, pub_year = pubd
         if updated:
-            upd = [int(x) for x in updated.split("/")]
-            if len(upd) == 2:
-                upd.append(date.today().year)
-            up_month, up_day, up_year = upd
+            if "m" in updated or "h" in updated:
+                up_month, up_day, up_year = (date.today().month, date.today().day, date.today().year)
+            else:
+                upd = [int(x) for x in updated.split("/")]
+                if len(upd) == 2:
+                    upd.append(date.today().year)
+                up_month, up_day, up_year = upd
 
         words = in_dictionary(_data, "Words")
 
