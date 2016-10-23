@@ -5,6 +5,7 @@ import re
 import sys
 import uuid
 from datetime import date
+from typing import List
 from urllib.parse import urlparse
 
 import iso639
@@ -14,7 +15,7 @@ from ebooklib import epub
 from mako.template import Template
 
 
-def dictionarise(data):
+def dictionarise(data: List[str]) -> dict:
     """
     Transform a list with fic data into a dictionary.
     """
@@ -37,19 +38,19 @@ def dictionarise(data):
     return dic
 
 
-def in_dictionary(dic, key):
+def in_dictionary(dic: dict, key: str) -> str:
     return dic[key] if key in dic.keys() else None
 
 
 class Story(object):
-    def __init__(self, url):
+    def __init__(self, url: str) -> None:
         super(Story, self).__init__()
         self.title = str
         self.author = str
         self.author_url = str
         self.lang = str
-        self.chapters = []
-        self.chapter_titles = []
+        self.chapters = []  # type: List[str]
+        self.chapter_titles = []  # type: List[str]
         self.main_url = url
         self.chapter_url = str
         self.complete = False
@@ -77,12 +78,14 @@ class Story(object):
         return base_url.scheme + "://" + base_url.netloc + partial
 
     @staticmethod
-    def get_story(page) -> str:
+    def get_story(page: r.models.Response) -> str:
         """
         Returns only the text of the chapter
         """
-        return "".join(
-            [str(x) for x in BeautifulSoup(page.content, "html5lib").find("div", class_="storytext").contents])
+        return "".join([
+                           str(x) for x in
+                           BeautifulSoup(page.content, "html5lib").find("div", class_="storytext").contents
+                           ])
 
     def get_chapters(self):
         """

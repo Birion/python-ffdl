@@ -2,6 +2,7 @@
 # coding=utf-8
 
 import click
+
 from ffdl import Story
 
 
