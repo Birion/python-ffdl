@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="pyffdl",
-    version="0.0.1.dev4",
+    version="0.0.1.dev5",
     py_modules=["pyffdl"],
     packages=["ffdl"],
     include_package_data=True,
@@ -26,7 +26,7 @@ setup(
         "beautifulsoup4",
         "ebooklib",
         "mako",
-        "html5lib==0.999"
+        "html5lib"
     ],
     entry_points="""
         [console_scripts]
