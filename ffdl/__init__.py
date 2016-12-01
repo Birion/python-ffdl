@@ -8,6 +8,7 @@ from datetime import date
 from typing import List
 from urllib.parse import urlparse
 
+import click
 import iso639
 import requests as r
 from bs4 import BeautifulSoup
@@ -111,7 +112,7 @@ class Story(object):
         _data = dictionarise(
             [x.strip() for x in " ".join([x for x in _header.find(class_="xgray").stripped_strings]).split(" - ")])
 
-        print(_data)
+        click.echo(_data)
 
         published = in_dictionary(_data, "Published")
         updated = in_dictionary(_data, "Updated")
@@ -180,7 +181,7 @@ class Story(object):
             header = "<h1>" + chapter + "</h1>"
             story = header + self.get_story(r.get(chapter_url))
             chapter_number = str(index + 1).zfill(chap_padding)
-            print("Downloading chapter " + chapter_number + " - " + chapter)
+            click.echo("Downloading chapter " + click.style(chapter_number, bold=True) + " - " + chapter)
             _chapter = epub.EpubHtml(
                 title=chapter,
                 file_name="chapter_{}.xhtml".format(chapter_number),
@@ -214,6 +215,10 @@ class Story(object):
             book.add_item(c)
             book.spine.append(c)
 
+        bookname = '{author} - {title}.epub'.format(author=self.author, title=re.sub(r"[:/]", "_", self.title))
+
+        click.echo("Writing into " + click.style(bookname, bold=True) + ".")
+
         epub.write_epub(
-            '{author} - {title}.epub'.format(author=self.author, title=re.sub(r"[:/]", "_", self.title)), book, {}
+            bookname, book, {}
         )
