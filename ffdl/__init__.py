@@ -49,8 +49,8 @@ class Story(object):
         self.title = str
         self.author = str
         self.author_url = str
-        self.lang = str
-        self.chapters = []  # type: List[str]
+        self.language = str
+        self.chapters = []  # type: List[epub.EpubHtml]
         self.chapter_titles = []  # type: List[str]
         self.main_url = url
         self.chapter_url = str
@@ -153,7 +153,7 @@ class Story(object):
         self.words = int(words.replace(",", ""))
         self.published = date(pub_year, pub_month, pub_day)
         self.updated = date(up_year, up_month, up_day)
-        self.lang = iso639.to_iso639_1(in_dictionary(_data, "Language"))
+        self.language = iso639.to_iso639_1(in_dictionary(_data, "Language"))
         self.complete = in_dictionary(_data, "Status")
 
     def make_ebook(self):
@@ -163,7 +163,7 @@ class Story(object):
         book = epub.EpubBook()
         book.set_identifier(str(uuid.uuid4()))
         book.set_title(self.title)
-        book.set_language(self.lang)
+        book.set_language(self.language)
         book.add_author(self.author)
 
         with open(os.path.join(os.path.dirname(__file__), "style.css")) as fp:
@@ -217,7 +217,7 @@ class Story(object):
 
         bookname = '{author} - {title}.epub'.format(author=self.author, title=re.sub(r"[:/]", "_", self.title))
 
-        click.echo("Writing into " + click.style(bookname, bold=True) + ".")
+        click.echo("Writing into " + click.style(bookname, bold=True))
 
         epub.write_epub(
             bookname, book, {}
