@@ -1,38 +1,31 @@
 body {
-    margin: 0.5em;
-    padding: auto;
-    font-size: 1em;
-}
+  margin: 0.5em;
+  padding: auto;
+  font-size: 1em; }
 
 p {
-    text-align: justify;
-    text-indent: 1.25em;
-    margin: auto;
-}
+  text-align: justify;
+  text-indent: 1.25em;
+  margin: auto; }
 
-div > p:nth-of-type(1) {
-    text-indent: 0;
-}
+div p:nth-of-type(1) {
+  text-indent: 0; }
 
 h1, h2, h3 {
-    font-variant: small-caps;
-    text-align: center;
-}
+  font-variant: small-caps;
+  text-align: center; }
 
 .header, .center {
-    text-align: center;
-}
+  text-align: center; }
 
 .author {
-    margin-top: 1em;
-    margin-bottom: 1em;
-    font-size: 150%;
-}
+  margin: 1em auto;
+  font-size: 150%; }
 
 .source {
-    margin-bottom: 1em;
-}
+  margin-bottom: 1em; }
 
 .pagebreak {
-    page-break-before: always;
-}
+  page-break-before: always; }
+
+/*# sourceMappingURL=style.css.map */
