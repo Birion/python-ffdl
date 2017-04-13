@@ -4,7 +4,9 @@
 %>
 <%
     number_of_chapters = len(story.chapters) if story.complete else "??"
-    chapters = "/".join(map(str, (len(story.chapters), number_of_chapters)))
+    chapters = "{}/{}".format(len(story.chapters), number_of_chapters)
+    genres = "/".join(story.genres) if story.genres else None
+    characters = ", ".join(story.characters) if story.characters else None
 
     metadata = [
         ("Story", story.title),
@@ -14,8 +16,8 @@
         ("Language", story.language),
         ("Rating", story.rating),
         ("Category", story.category),
-        ("Genre", "/".join(story.genres)),
-        ("Characters", ", ".join(story.characters)),
+        ("Genre", genres),
+        ("Characters", characters),
         ("Published", story.published.isoformat()),
         ("Updated", story.updated.isoformat()),
         ("Downloaded", datetime.now()),
