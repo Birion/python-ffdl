@@ -152,8 +152,6 @@ class Story(object):
                 story_date.append(date.today().year)
             return date(story_date[2], story_date[0], story_date[1])
 
-        words = in_dictionary(_data, "Words")
-
         self.title = _header.find("b").string
         self.author = _author.string
         self.author_url = self.main_url.copy().set(path=_author["href"])
@@ -162,7 +160,7 @@ class Story(object):
         self.category = self.main_page.find(id="pre_story_links").find("a").string
         self.genres = in_dictionary(_data, "Genres")
         self.characters = in_dictionary(_data, "Characters")
-        self.words = int(words.replace(",", ""))
+        self.words = in_dictionary(_data, "Words")
         self.published = check_date(published)
         self.updated = check_date(updated)
         self.language = in_dictionary(_data, "Language")
@@ -197,7 +195,12 @@ class Story(object):
             header = f"<h1>{chapter}</h1>"
             story = header + self.get_story(r.get(chapter_url))
             chapter_number = str(index + 1).zfill(chap_padding)
-            click.echo("Downloading chapter " + click.style(chapter_number, bold=True) + f" - {chapter}.")
+            click.echo(
+                "Downloading chapter "
+                + click.style(chapter_number, bold=True, fg="blue")
+                + " - "
+                + click.style(chapter, fg="yellow")
+            )
             _chapter = epub.EpubHtml(
                 title=chapter,
                 file_name=f"chapter_{chapter_number}.xhtml",
@@ -233,7 +236,7 @@ class Story(object):
 
         bookname = f"{self.author} - {re.sub(r'[:/]', '_', self.title)}.epub"
 
-        click.echo("Writing into " + click.style(bookname, bold=True))
+        click.echo("Writing into " + click.style(bookname, bold=True, fg="green"))
 
         epub.write_epub(
             bookname, book, {}

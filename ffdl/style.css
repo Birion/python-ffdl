@@ -1,10 +1,12 @@
 body {
-    margin: 0.5em;
-    font-size: 1em; }
+  margin: 0.5em;
+  padding: 1em;
+  font-size: 1em; }
 
 p {
-    text-align: justify;
-    margin: auto; }
+  text-align: justify;
+  text-indent: 1.25em;
+  margin: auto; }
 
 div p:nth-of-type(1) {
   text-indent: 0; }
@@ -25,3 +27,5 @@ h1, h2, h3 {
 
 .pagebreak {
   page-break-before: always; }
+
+/*# sourceMappingURL=style.css.map */
