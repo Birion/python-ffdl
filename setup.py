@@ -1,10 +1,8 @@
-# coding=utf-8
-
 from setuptools import setup
 
 setup(
     name="pyffdl",
-    version="0.1.1",
+    version="0.1.2",
     py_modules=["pyffdl"],
     packages=["ffdl"],
     include_package_data=True,

@@ -1,0 +1,8 @@
+click
+iso639
+requests
+beautifulsoup4
+ebooklib
+mako
+html5lib
+furl

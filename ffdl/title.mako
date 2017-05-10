@@ -10,9 +10,9 @@
 
     metadata = [
         ("Story", story.title),
-        ("Author", story.author),
+        ("Author", story.author["name"]),
         ("URL", story.main_url, True),
-        ("Author URL", story.author_url, True),
+        ("Author URL", story.author["url"], True),
         ("Language", story.language),
         ("Rating", story.rating),
         ("Category", story.category),
