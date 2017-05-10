@@ -24,7 +24,7 @@ setup(
         "beautifulsoup4",
         "ebooklib>=0.16",
         "mako>=1",
-        "html5lib",
+        "html5lib>0.9999",
         "furl>=1"
     ],
     entry_points="""
