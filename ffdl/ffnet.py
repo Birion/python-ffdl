@@ -1,51 +1,18 @@
 from datetime import date
-from os.path import join, dirname
 from re import sub, compile
 from sys import exit
-from typing import List, Dict
-from uuid import uuid4
 
 from bs4 import BeautifulSoup
-from click import echo, style
-from ebooklib import epub
-from furl import furl
-from iso639 import to_iso639_1
-from mako.template import Template
+from click import echo
 from requests import get, Response
 
+from ffdl.story import Story
 from ffdl.misc import dictionarise, in_dictionary
 
 
-class Story(object):
+class FanFictionNetStory(Story):
     def __init__(self, url: str) -> None:
-        super(Story, self).__init__()
-        self.main_url: furl = furl(url)
-        self.main_page: BeautifulSoup = None
-
-        self.title: str = None
-        self.author: Dict[str, str] = {
-            "name": None,
-            "url": None
-        }
-
-        self.chapters: List[epub.EpubHtml] = []
-        self.chapter_titles: List[str] = []
-
-        self.complete: bool = False
-        self.published: date = None
-        self.updated: date = None
-
-        self.language: str = None
-        self.category: str = None
-        self.genres: List[str] = []
-        self.characters: List[str] = []
-        self.words: int = None
-        self.summary: str = None
-        self.rating: str = None
-
-        self.setup()
-        self.make_title_page()
-        self.get_chapters()
+        super(FanFictionNetStory, self).__init__(url)
 
     def setup(self) -> None:
         main_page_request = get(self.main_url)
@@ -64,7 +31,7 @@ class Story(object):
             in BeautifulSoup(page.content, "html5lib").find("div", class_="storytext").contents
         ])
 
-    def get_chapters(self):
+    def get_chapters(self) -> None:
         """
         Gets the number of chapters and the base template for chapter URLs
         """
@@ -75,7 +42,7 @@ class Story(object):
         else:
             self.chapter_titles = [self.title]
 
-    def make_title_page(self):
+    def make_title_page(self) -> None:
         """
         Parses the main page for information about the story and author.
         """
@@ -88,12 +55,12 @@ class Story(object):
         published = in_dictionary(_data, "Published")
         updated = in_dictionary(_data, "Updated")
 
-        def check_date(in_date: str) -> date:
-            if not in_date:
+        def check_date(input_date: str) -> date:
+            if not input_date:
                 return date(1970, 1, 1)
-            if "m" in in_date or "h" in in_date:
+            if "m" in input_date or "h" in input_date:
                 return date.today()
-            story_date = [int(x) for x in in_date.split("/")]
+            story_date = [int(x) for x in input_date.split("/")]
             if len(story_date) == 2:
                 story_date.append(date.today().year)
             return date(story_date[2], story_date[0], story_date[1])
@@ -111,81 +78,3 @@ class Story(object):
         self.updated = check_date(updated)
         self.language = in_dictionary(_data, "Language")
         self.complete = in_dictionary(_data, "Status")
-
-    def make_ebook(self):
-        """
-        Combines everything to make an ePub book.
-        """
-        book = epub.EpubBook()
-        book.set_identifier(str(uuid4()))
-        book.set_title(self.title)
-        book.set_language(to_iso639_1(self.language))
-        book.add_author(self.author["name"])
-
-        book.add_item(epub.EpubNcx())
-        book.add_item(epub.EpubNav())
-
-        with open(join(dirname(__file__), "style.css")) as fp:
-            css = epub.EpubItem(
-                uid="style",
-                file_name="style/style.css",
-                media_type="text/css",
-                content=fp.read()
-            )
-
-        def digit_length(number: int) -> int:
-            return len(str(number))
-
-        chap_padding = digit_length(len(self.chapter_titles)) if digit_length(len(self.chapter_titles)) > 2 else 2
-
-        for index, chapter in enumerate(self.chapter_titles):
-            chapter_url = self.main_url.copy()
-            chapter_url.path.segments[-2] = str(index + 1)
-            header = f"<h1>{chapter}</h1>"
-            story = header + self.get_story(get(chapter_url))
-            chapter_number = str(index + 1).zfill(chap_padding)
-            echo(
-                "Downloading chapter "
-                + style(chapter_number, bold=True, fg="blue")
-                + " - "
-                + style(chapter, fg="yellow")
-            )
-            _chapter = epub.EpubHtml(
-                title=chapter,
-                file_name=f"chapter{chapter_number}.xhtml",
-                content=story,
-                uid=f"chapter{chapter_number}"
-            )
-            _chapter.add_item(css)
-            self.chapters.append(_chapter)
-
-        book.toc = [x for x in self.chapters]
-
-        template = Template(filename=join(dirname(__file__), "title.mako"))
-
-        title_page = epub.EpubHtml(
-            title=self.title,
-            file_name="title.xhtml",
-            uid="title",
-            content=template.render(
-                story=self
-            )
-        )
-        title_page.add_item(css)
-        book.add_item(title_page)
-
-        book.add_item(css)
-
-        book.spine = [title_page]
-
-        for c in self.chapters:
-            book.add_item(c)
-            book.spine.append(c)
-
-        book.spine.append("nav")
-
-        bookname = f"{self.author['name']} - {sub(r'[:/]', '_', self.title)}.epub"
-
-        echo("Writing into " + style(bookname, bold=True, fg="green"))
-
-        epub.write_epub(bookname, book, {"tidyhtml": True})
