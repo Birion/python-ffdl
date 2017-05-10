@@ -1,1 +1,1 @@
-from ffdl.ffnet import Story as FanFictionNetStory
+from .ffnet import Story as FanFictionNetStory

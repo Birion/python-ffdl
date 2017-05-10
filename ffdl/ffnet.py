@@ -1,17 +1,17 @@
+from datetime import date
 from os.path import join, dirname
 from re import sub, compile
 from sys import exit
-from uuid import uuid4
-from datetime import date
 from typing import List, Dict
+from uuid import uuid4
 
-from click import echo, style
-from iso639 import to_iso639_1
-from requests import get, Response
 from bs4 import BeautifulSoup
+from click import echo, style
 from ebooklib import epub
 from furl import furl
+from iso639 import to_iso639_1
 from mako.template import Template
+from requests import get, Response
 
 from ffdl.misc import dictionarise, in_dictionary
 
@@ -58,9 +58,10 @@ class Story(object):
         """
         Returns only the text of the chapter
         """
+
         return "".join([
-            str(x) for x in
-            BeautifulSoup(page.content, "html5lib").find("div", class_="storytext").contents
+            sub(r"\s+", " ", str(x).strip()) for x
+            in BeautifulSoup(page.content, "html5lib").find("div", class_="storytext").contents
         ])
 
     def get_chapters(self):
@@ -119,7 +120,10 @@ class Story(object):
         book.set_identifier(str(uuid4()))
         book.set_title(self.title)
         book.set_language(to_iso639_1(self.language))
-        book.add_author(self.author)
+        book.add_author(self.author["name"])
+
+        book.add_item(epub.EpubNcx())
+        book.add_item(epub.EpubNav())
 
         with open(join(dirname(__file__), "style.css")) as fp:
             css = epub.EpubItem(
@@ -148,15 +152,14 @@ class Story(object):
             )
             _chapter = epub.EpubHtml(
                 title=chapter,
-                file_name=f"chapter_{chapter_number}.xhtml",
-                content=story
+                file_name=f"chapter{chapter_number}.xhtml",
+                content=story,
+                uid=f"chapter{chapter_number}"
             )
             _chapter.add_item(css)
             self.chapters.append(_chapter)
 
-        book.toc = (x for x in self.chapters)
-
-        book.add_item(epub.EpubNcx())
+        book.toc = [x for x in self.chapters]
 
         template = Template(filename=join(dirname(__file__), "title.mako"))
 
@@ -169,20 +172,20 @@ class Story(object):
             )
         )
         title_page.add_item(css)
-
         book.add_item(title_page)
 
         book.add_item(css)
+
         book.spine = [title_page]
 
         for c in self.chapters:
             book.add_item(c)
             book.spine.append(c)
 
-        bookname = f"{self.author} - {sub(r'[:/]', '_', self.title)}.epub"
+        book.spine.append("nav")
+
+        bookname = f"{self.author['name']} - {sub(r'[:/]', '_', self.title)}.epub"
 
         echo("Writing into " + style(bookname, bold=True, fg="green"))
 
-        epub.write_epub(
-            bookname, book, {}
-        )
+        epub.write_epub(bookname, book, {"tidyhtml": True})

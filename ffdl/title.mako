@@ -38,7 +38,7 @@
     % endif
 </%def>
 <div class="header">
-    <h1>${story.title}</h1> by <h2>${story.author}</h2>
+    <h1>${story.title}</h1> by <h2>${story.author["name"]}</h2>
 </div>
 <div class="titlepage">
     % for data in metadata:

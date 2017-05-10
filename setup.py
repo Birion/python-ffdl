@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="pyffdl",
-    version="0.1.2",
+    version="0.1.3",
     py_modules=["pyffdl"],
     packages=["ffdl"],
     include_package_data=True,
@@ -18,14 +18,14 @@ setup(
         "Programming Language :: Python :: 3.6"
     ],
     install_requires=[
-        "click",
-        "iso639",
-        "requests",
+        "click>=6",
+        "iso639>=0.1",
+        "requests>=2",
         "beautifulsoup4",
-        "ebooklib",
-        "mako",
+        "ebooklib>=0.16",
+        "mako>=1",
         "html5lib",
-        "furl"
+        "furl>=1"
     ],
     entry_points="""
         [console_scripts]
