@@ -16,7 +16,7 @@ from requests import get, Response
 
 
 class Story(object):
-    def __init__(self, url):
+    def __init__(self, url: str) -> None:
         super(Story, self).__init__()
 
         self.main_url: furl = furl(url)
