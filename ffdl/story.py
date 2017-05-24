@@ -14,7 +14,7 @@ from os.path import join, dirname
 
 from mako.template import Template
 from requests import get, Response
-from requests import status_codes
+from requests import codes
 
 
 class Story(object):
@@ -54,7 +54,7 @@ class Story(object):
 
     def setup(self) -> None:
         main_page_request = get(self.main_url)
-        if main_page_request.status_code != status_codes.ok:
+        if main_page_request.status_code != codes.ok:
             exit(1)
         self.main_page = BeautifulSoup(main_page_request.content, "html5lib")
 

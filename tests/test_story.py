@@ -23,13 +23,6 @@ def test_check_empty_setup():
 
 
 def test_check_setup_with_nonexistent_url():
-    story = Story("http://httpbin.org/status/404")
-    assert story.setup() == 1
-
-
-def test_setup():
-    story = Story("http://httpbin.org/html")
-    story.setup()
-    with open("html") as fp:
-        html = BeautifulSoup(fp.read(), "html5lib")
-    assert story.main_page == html
+    with pytest.raises(SystemExit):
+        story = Story("http://httpbin.org/status/404")
+        story.setup()
