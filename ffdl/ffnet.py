@@ -14,12 +14,6 @@ class FanFictionNetStory(Story):
     def __init__(self, url: str) -> None:
         super(FanFictionNetStory, self).__init__(url)
 
-    def setup(self) -> None:
-        main_page_request = get(self.main_url)
-        if main_page_request.status_code != 200:
-            exit(1)
-        self.main_page = BeautifulSoup(main_page_request.content, "html5lib")
-
     @staticmethod
     def get_story(page: Response) -> str:
         """
