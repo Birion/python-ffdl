@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from iso639 import data
 
@@ -66,5 +66,5 @@ def dictionarise(data: List[str]) -> dict:
     return dic
 
 
-def in_dictionary(dic: dict, key: str) -> str:
+def in_dictionary(dic: dict, key: Union[str, int, tuple]) -> str:
     return dic[key] if key in dic.keys() else None

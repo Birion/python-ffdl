@@ -19,7 +19,7 @@ def cli(url: str) -> None:
     available_urls = list(story_match.keys())
     if parsed_url.host in available_urls:
         story = story_match[parsed_url.host](url)
-        story.make_ebook()
+        story.run()
     else:
         click.echo(__file__ + " is currently only able to download from " + list2text(available_urls) + ".")
 

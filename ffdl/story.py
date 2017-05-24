@@ -2,6 +2,7 @@ from datetime import date
 from re import sub
 from typing import Dict, List
 from uuid import uuid4
+from sys import exit
 
 from bs4 import BeautifulSoup
 from click import echo, style
@@ -13,6 +14,7 @@ from os.path import join, dirname
 
 from mako.template import Template
 from requests import get, Response
+from requests import status_codes
 
 
 class Story(object):
@@ -43,13 +45,16 @@ class Story(object):
         self.summary: str = None
         self.rating: str = None
 
+    def run(self):
+
         self.setup()
         self.make_title_page()
         self.get_chapters()
+        self.make_ebook()
 
     def setup(self) -> None:
         main_page_request = get(self.main_url)
-        if main_page_request.status_code != 200:
+        if main_page_request.status_code != status_codes.ok:
             exit(1)
         self.main_page = BeautifulSoup(main_page_request.content, "html5lib")
 
