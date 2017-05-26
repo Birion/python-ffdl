@@ -1,5 +1,7 @@
 from typing import List, Union
 
+from bs4 import BeautifulSoup
+from ebooklib import epub
 from iso639 import data
 
 GENRES = [
@@ -68,3 +70,13 @@ def dictionarise(data: List[str]) -> dict:
 
 def in_dictionary(dic: dict, key: Union[str, int, tuple]) -> str:
     return dic[key] if key in dic.keys() else None
+
+
+def get_url_from_file(file: str) -> str:
+    book = epub.read_epub(file)
+    title_page = book.get_item_with_id("title")
+    parsed_text = BeautifulSoup(title_page.content, "html5lib")
+    url = parsed_text.find(id="story-url")
+    if not url:
+        url = parsed_text
+    return url("a")[0]["href"]

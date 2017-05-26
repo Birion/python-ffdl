@@ -9,20 +9,20 @@
     characters = ", ".join(story.characters) if story.characters else None
 
     metadata = [
-        ("Story", story.title),
-        ("Author", story.author["name"]),
-        ("URL", story.main_url, True),
-        ("Author URL", story.author["url"], True),
-        ("Language", story.language),
-        ("Rating", story.rating),
-        ("Category", story.category),
-        ("Genre", genres),
-        ("Characters", characters),
-        ("Published", story.published.isoformat()),
-        ("Updated", story.updated.isoformat()),
-        ("Downloaded", datetime.now()),
-        ("Words", story.words),
-        ("Chapters", chapters)
+        ("Story", story.title, "title"),
+        ("Author", story.author["name"], "author"),
+        ("URL", story.main_url, "story-url", True),
+        ("Author URL", story.author["url"], "author-url", True),
+        ("Language", story.language, "lang"),
+        ("Rating", story.rating, "rating"),
+        ("Category", story.category, "category"),
+        ("Genre", genres, "genres"),
+        ("Characters", characters, "characters"),
+        ("Published", story.published.isoformat(), "published"),
+        ("Updated", story.updated.isoformat(), "updated"),
+        ("Downloaded", datetime.now(), "downloaded"),
+        ("Words", story.words, "words"),
+        ("Chapters", chapters, "chapters")
     ]
 %>
 <%def name="is_url(data, url)">
@@ -32,9 +32,9 @@
         ${data}
     % endif
 </%def>
-<%def name="print_metadata(datatype, data, url=False)">
+<%def name="print_metadata(datatype, data, id, url=False)">
     % if data:
-        <div><strong>${datatype}:</strong> ${is_url(data, url)}</div>
+        <div id="${id}"><strong>${datatype}:</strong> ${is_url(data, url)}</div>
     % endif
 </%def>
 <div class="header">
