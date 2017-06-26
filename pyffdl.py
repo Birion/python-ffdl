@@ -13,22 +13,14 @@ story_match = {
 }
 
 
-@click.group()
-def cli():
-    pass
-
-
-@cli.command()
-@click.argument("files", type=click.Path(), nargs=-1)
-def update(files: Tuple[str]) -> None:
-    addresses = tuple(get_url_from_file(file) for file in files)
-    url(addresses)
-
-
-@cli.command()
-@click.argument("url_list", nargs=-1)
-def url(url_list: Tuple[str, ...]) -> None:
-    for address in url_list:
+@click.command()
+@click.option("--update", type=click.Path())
+@click.argument("urls", nargs=-1)
+def cli(urls: Tuple[str, ...], update: str) -> None:
+    urls = list(urls)
+    if update:
+        urls.append(get_url_from_file(update))
+    for address in urls:
         parsed_url = furl(address)
         available_urls = list(story_match.keys())
         if parsed_url.host in available_urls:
