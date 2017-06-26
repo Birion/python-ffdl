@@ -5,4 +5,4 @@ Fanfiction downloader
 
 ## Usage
 
-`pyffdl.py <URLs>`
+`pyffdl.py [--update <FILE>] [<URL>[ <URL>[...]]]`
