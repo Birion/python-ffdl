@@ -1,7 +1,15 @@
+=center
+  text-align: center
+
+=no-indent
+  text-indent: 0
+
 body
   margin: 0.5em
   padding: 1em
-  font-size: 1em
+  font:
+    size: 1em
+    family: "Source Sans Pro", Helvetica, Arial, sans-serif
 
 p
   text-align: justify
@@ -10,14 +18,16 @@ p
 
 div
   p:nth-of-type(1)
-    text-indent: 0
+    +no-indent
 
 h1, h2, h3
   font-variant: small-caps
-  text-align: center
+  +center
+  & + p
+    +no-indent
 
 .header, .center
-  text-align: center
+  +center
 
 .author
   margin: 1em auto

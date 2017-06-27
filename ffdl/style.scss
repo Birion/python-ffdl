@@ -1,7 +1,18 @@
+@mixin center {
+  text-align: center;
+}
+
+@mixin no-indent {
+  text-indent: 0;
+}
+
 body {
   margin: 0.5em;
   padding: 1em;
-  font-size: 1em;
+  font: {
+    size: 1em;
+    family: "Source Sans Pro", Helvetica, Arial, sans-serif;
+  };
 }
 
 p {
@@ -12,17 +23,22 @@ p {
 
 div {
   p:nth-of-type(1) {
-    text-indent: 0;
+    @include no-indent;
   }
 }
 
 h1, h2, h3 {
   font-variant: small-caps;
-  text-align: center;
+
+  @include center;
+
+  & + p {
+    @include no-indent;
+  }
 }
 
 .header, .center {
-  text-align: center;
+  @include center;
 }
 
 .author {
