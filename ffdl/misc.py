@@ -75,6 +75,8 @@ def in_dictionary(dic: dict, key: Union[str, int, tuple]) -> str:
 def get_url_from_file(file: str) -> str:
     book = epub.read_epub(file)
     title_page = book.get_item_with_id("title")
+    if not title_page:  # if we're checking old-format ebook
+        title_page = book.get_item_with_id("nav")
     parsed_text = BeautifulSoup(title_page.content, "html5lib")
     url = parsed_text.find(id="story-url")
     if not url:
