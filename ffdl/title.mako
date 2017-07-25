@@ -6,7 +6,16 @@
     number_of_chapters = len(story.chapters) if story.complete else "??"
     chapters = "{}/{}".format(len(story.chapters), number_of_chapters)
     genres = "/".join(story.genres) if story.genres else None
-    characters = ", ".join(story.characters) if story.characters else None
+    characters = None
+    if story.characters:
+        characters = ""
+        if story.characters["couples"]:
+            couples = ["[" + ", ".join(x) + "]" for x in story.characters["couples"]]
+            characters += " ".join(couples)
+            if story.characters["singles"]:
+                characters += " "
+        if story.characters["singles"]:
+            characters += ", ".join(story.characters["singles"])
 
     metadata = [
         ("Story", story.title, "title"),

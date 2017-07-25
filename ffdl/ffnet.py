@@ -1,13 +1,13 @@
 from datetime import date
 from re import sub, compile
-from sys import exit
+from typing import List, Dict, Union
 
 from bs4 import BeautifulSoup
 from click import echo
-from requests import get, Response
+from requests import Response
 
-from ffdl.story import Story
 from ffdl.misc import dictionarise, in_dictionary
+from ffdl.story import Story
 
 
 class FanFictionNetStory(Story):
@@ -40,15 +40,6 @@ class FanFictionNetStory(Story):
         """
         Parses the main page for information about the story and author.
         """
-        _header = self.main_page.find(id="profile_top")
-        _author = _header.find("a", href=compile(r"^/u/\d+/"))
-        _data = dictionarise([x.strip() for x in " ".join(_header.find(class_="xgray").stripped_strings).split(" - ")])
-
-        echo(_data)
-
-        published = in_dictionary(_data, "Published")
-        updated = in_dictionary(_data, "Updated")
-
         def check_date(input_date: str) -> date:
             if not input_date:
                 return date(1970, 1, 1)
@@ -58,6 +49,38 @@ class FanFictionNetStory(Story):
             if len(story_date) == 2:
                 story_date.append(date.today().year)
             return date(story_date[2], story_date[0], story_date[1])
+
+        def parse_characters(characters: str) -> Dict[str, List[str]]:
+            out_couples = []
+            out_singles = []
+            couples = compile(r"\[[^[]+\]")
+            character_couples = [x for x in couples.finditer(characters)]
+
+            if character_couples:
+                num_couples = len(character_couples)
+                for couple in character_couples:
+                    out_couples.append(couple.group()[1:-1].split(", "))
+                for i in range(-1, -num_couples - 1, -1):
+                    match = character_couples[i]
+                    characters = characters.replace(match.group(), "").strip()
+            if characters:
+                out_singles = characters.split(", ")
+            return {"couples": out_couples, "singles": out_singles}
+
+        _header = self.main_page.find(id="profile_top")
+        _author = _header.find("a", href=compile(r"^/u/\d+/"))
+        _data = dictionarise([x.strip() for x in " ".join(_header.find(class_="xgray").stripped_strings).split(" - ")])
+
+        if "Characters" in _data.keys():
+            _data["Characters"] = ", ".join(_data["Characters"])
+            echo(_data)
+            _data["Characters"] = parse_characters(_data["Characters"])
+        else:
+            echo(_data)
+
+
+        published = in_dictionary(_data, "Published")
+        updated = in_dictionary(_data, "Updated")
 
         self.title = _header.find("b").string
         self.author["name"] = _author.string
