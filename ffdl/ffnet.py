@@ -1,6 +1,6 @@
 from datetime import date
 from re import sub, compile
-from typing import List, Dict, Union
+from typing import List, Dict
 
 from bs4 import BeautifulSoup
 from click import echo
@@ -40,6 +40,7 @@ class FanFictionNetStory(Story):
         """
         Parses the main page for information about the story and author.
         """
+
         def check_date(input_date: str) -> date:
             if not input_date:
                 return date(1970, 1, 1)
@@ -77,7 +78,6 @@ class FanFictionNetStory(Story):
             _data["Characters"] = parse_characters(_data["Characters"])
         else:
             echo(_data)
-
 
         published = in_dictionary(_data, "Published")
         updated = in_dictionary(_data, "Updated")

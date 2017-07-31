@@ -30,6 +30,10 @@ h1 + p, h2 + p, h3 + p {
   text-indent: 0;
 }
 
+p.center {
+  text-indent: 0;
+}
+
 .author {
   margin: 1em auto;
   font-size: 150%;
