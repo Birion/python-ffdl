@@ -13,7 +13,7 @@ from iso639 import to_iso639_1
 from os.path import join, dirname
 
 from mako.template import Template
-from requests import get, Response
+from requests import Response, Session
 from requests import codes
 
 
@@ -23,6 +23,7 @@ class Story(object):
 
         self.main_url: furl = furl(url)
         self.main_page: BeautifulSoup = None
+        self.session = Session()
 
         self.title: str = None
         self.author: Dict[str, str] = {
@@ -53,7 +54,7 @@ class Story(object):
         self.make_ebook()
 
     def setup(self) -> None:
-        main_page_request = get(self.main_url)
+        main_page_request = self.session.get(self.main_url)
         if main_page_request.status_code != codes.ok:
             exit(1)
         self.main_page = BeautifulSoup(main_page_request.content, "html5lib")
@@ -107,7 +108,8 @@ class Story(object):
             chapter_url = self.main_url.copy()
             chapter_url.path.segments[-2] = str(index + 1)
             header = f"<h1>{chapter}</h1>"
-            story = header + self.get_story(get(chapter_url))
+            raw_chapter = self.session.get(chapter_url)
+            story = header + self.get_story(raw_chapter)
             chapter_number = str(index + 1).zfill(chap_padding)
             echo(
                 "Downloading chapter "

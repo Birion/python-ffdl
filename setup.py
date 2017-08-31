@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="pyffdl",
-    version="0.3.5",
+    version="0.3.6",
     py_modules=["pyffdl"],
     packages=["ffdl"],
     include_package_data=True,
