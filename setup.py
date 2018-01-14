@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="pyffdl",
-    version="0.3.6",
+    version="0.3.7",
     py_modules=["pyffdl"],
     packages=["ffdl"],
     include_package_data=True,
@@ -24,7 +24,7 @@ setup(
         "beautifulsoup4",
         "ebooklib>=0.16",
         "mako>=1",
-        "html5lib>0.9999",
+        "html5lib>=1",
         "furl>=1"
     ],
     entry_points="""

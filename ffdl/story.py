@@ -18,6 +18,7 @@ from requests import codes
 
 
 class Story(object):
+    ILLEGAL_CHARACTERS = '[<>:"/\|?]'
     def __init__(self, url: str) -> None:
         super(Story, self).__init__()
 
@@ -151,7 +152,9 @@ class Story(object):
 
         book.spine.append("nav")
 
-        bookname = f"{self.author['name']} - {sub(r'[:/]', '_', self.title)}.epub"
+        clean_title = sub(rf'{self.ILLEGAL_CHARACTERS}', '_', self.title)
+
+        bookname = f"{self.author['name']} - {clean_title}.epub"
 
         echo("Writing into " + style(bookname, bold=True, fg="green"))
 
