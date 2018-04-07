@@ -26,6 +26,10 @@ class Story(object):
         self.main_page: BeautifulSoup = None
         self.session = Session()
 
+        self.styles = []
+
+        self.filename: str = None
+
         self.title: str = None
         self.author: Dict[str, str] = {
             "name": None,
@@ -46,6 +50,7 @@ class Story(object):
         self.words: int = None
         self.summary: str = None
         self.rating: str = None
+        self.tags: List[str] = []
 
     def run(self):
 
@@ -79,7 +84,20 @@ class Story(object):
         """
         pass
 
-    def make_ebook(self) -> None:
+    def step_through_chapters(self) -> None:
+        """
+        Runs through the list of chapters and downloads each one.
+        """
+        pass
+
+    def write_bookfile(self, book) -> None:
+        """
+        Create the epub file.
+        """
+        echo("Writing into " + style(self.filename, bold=True, fg="green"))
+        epub.write_epub(self.filename, book, {"tidyhtml": True})
+
+    def make_ebook(self, extra_css: str=None) -> None:
         """
         Combines everything to make an ePub book.
         """
@@ -92,40 +110,21 @@ class Story(object):
         book.add_item(EpubNcx())
         book.add_item(EpubNav())
 
-        with open(join(dirname(__file__), "style.css")) as fp:
-            css = epub.EpubItem(
+        if not extra_css:
+            style_file = join(dirname(__file__), "style.css")
+        else:
+            style_file = extra_css
+
+        with open(style_file) as fp:
+            _css = epub.EpubItem(
                 uid="style",
                 file_name="style/style.css",
                 media_type="text/css",
                 content=fp.read()
             )
+            self.styles.append(_css)
 
-        def digit_length(number: int) -> int:
-            return len(str(number))
-
-        chap_padding = digit_length(len(self.chapter_titles)) if digit_length(len(self.chapter_titles)) > 2 else 2
-
-        for index, chapter in enumerate(self.chapter_titles):
-            chapter_url = self.main_url.copy()
-            chapter_url.path.segments[-2] = str(index + 1)
-            header = f"<h1>{chapter}</h1>"
-            raw_chapter = self.session.get(chapter_url)
-            story = header + self.get_story(raw_chapter)
-            chapter_number = str(index + 1).zfill(chap_padding)
-            echo(
-                "Downloading chapter "
-                + style(chapter_number, bold=True, fg="blue")
-                + " - "
-                + style(chapter, fg="yellow")
-            )
-            _chapter = epub.EpubHtml(
-                title=chapter,
-                file_name=f"chapter{chapter_number}.xhtml",
-                content=story,
-                uid=f"chapter{chapter_number}"
-            )
-            _chapter.add_item(css)
-            self.chapters.append(_chapter)
+        self.step_through_chapters()
 
         book.toc = [x for x in self.chapters]
 
@@ -139,10 +138,12 @@ class Story(object):
                 story=self
             )
         )
-        title_page.add_item(css)
+        for s in self.styles:
+            title_page.add_item(s)
         book.add_item(title_page)
 
-        book.add_item(css)
+        for s in self.styles:
+            book.add_item(s)
 
         book.spine = [title_page]
 
@@ -152,10 +153,5 @@ class Story(object):
 
         book.spine.append("nav")
 
-        clean_title = sub(rf'{self.ILLEGAL_CHARACTERS}', '_', self.title)
+        self.write_bookfile(book)
 
-        bookname = f"{self.author['name']} - {clean_title}.epub"
-
-        echo("Writing into " + style(bookname, bold=True, fg="green"))
-
-        epub.write_epub(bookname, book, {"tidyhtml": True})

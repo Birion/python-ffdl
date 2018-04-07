@@ -6,6 +6,7 @@
     number_of_chapters = len(story.chapters) if story.complete else "??"
     chapters = "{}/{}".format(len(story.chapters), number_of_chapters)
     genres = "/".join(story.genres) if story.genres else None
+    tags = ", ".join(story.tags) if story.tags else None
     characters = None
     if story.characters:
         characters = ""
@@ -31,6 +32,7 @@
         ("Updated", story.updated.isoformat(), "updated"),
         ("Downloaded", datetime.now(), "downloaded"),
         ("Words", story.words, "words"),
+        ("Tags", tags, "tags"),
         ("Chapters", chapters, "chapters")
     ]
 %>

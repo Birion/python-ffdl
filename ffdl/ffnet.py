@@ -3,8 +3,10 @@ from re import sub, compile
 from typing import List, Dict
 
 from bs4 import BeautifulSoup
-from click import echo
+from click import echo, style
 from requests import Response
+from ebooklib import epub
+from ebooklib.epub import EpubHtml, EpubBook, EpubNcx, EpubNav
 
 from ffdl.misc import dictionarise, in_dictionary
 from ffdl.story import Story
@@ -95,3 +97,39 @@ class FanFictionNetStory(Story):
         self.updated = check_date(updated)
         self.language = in_dictionary(_data, "Language")
         self.complete = in_dictionary(_data, "Status")
+
+        clean_title = sub(rf'{self.ILLEGAL_CHARACTERS}', '_', self.title)
+        self.filename = f"{self.author['name']} - {clean_title}.epub"
+
+    def step_through_chapters(self) -> None:
+        """
+        Runs through the list of chapters and downloads each one.
+        """
+        def digit_length(number: int) -> int:
+            return len(str(number))
+
+        chap_padding = digit_length(len(self.chapter_titles)) if digit_length(len(self.chapter_titles)) > 2 else 2
+
+        for index, chapter in enumerate(self.chapter_titles):
+            chapter_url = self.main_url.copy()
+            chapter_url.path.segments[-2] = str(index + 1)
+            header = f"<h1>{chapter}</h1>"
+            raw_chapter = self.session.get(chapter_url)
+            story = header + self.get_story(raw_chapter)
+            chapter_number = str(index + 1).zfill(chap_padding)
+            echo(
+                "Downloading chapter "
+                + style(chapter_number, bold=True, fg="blue")
+                + " - "
+                + style(chapter, fg="yellow")
+            )
+            _chapter = EpubHtml(
+                title=chapter,
+                file_name=f"chapter{chapter_number}.xhtml",
+                content=story,
+                uid=f"chapter{chapter_number}"
+            )
+            for s in self.styles:
+                _chapter.add_item(s)
+            self.chapters.append(_chapter)
+
