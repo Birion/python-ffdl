@@ -9,7 +9,7 @@ from ffdl.misc import list2text, get_url_from_file
 
 story_match = {
     "fanfiction.net": FanFictionNetStory,
-    "fictionpress.net": FanFictionNetStory,
+    "fictionpress.com": FanFictionNetStory,
     "adult-fanfiction.org": AdultFanFictionStory
 }
 
