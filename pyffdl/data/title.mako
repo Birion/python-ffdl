@@ -1,6 +1,6 @@
 ## coding=utf-8
 <%!
-    from datetime import datetime
+    from pendulum import now
 %>
 <%
     number_of_chapters = len(story.chapters) if story.complete else "??"
@@ -20,17 +20,17 @@
 
     metadata = [
         ("Story", story.title, "title"),
-        ("Author", story.author["name"], "author"),
-        ("URL", story.main_url, "story-url", True),
-        ("Author URL", story.author["url"], "author-url", True),
+        ("Author", story.author.name, "author"),
+        ("URL", story.url, "story-url", True),
+        ("Author URL", story.author.url, "author-url", True),
         ("Language", story.language, "lang"),
         ("Rating", story.rating, "rating"),
         ("Category", story.category, "category"),
         ("Genre", genres, "genres"),
         ("Characters", characters, "characters"),
-        ("Published", story.published.isoformat(), "published"),
-        ("Updated", story.updated.isoformat(), "updated"),
-        ("Downloaded", datetime.now(), "downloaded"),
+        ("Published", story.published.to_iso8601_string() if story.published else None, "published"),
+        ("Updated", story.updated.to_iso8601_string() if story.updated else None, "updated"),
+        ("Downloaded", now().to_iso8601_string(), "downloaded"),
         ("Words", story.words, "words"),
         ("Tags", tags, "tags"),
         ("Chapters", chapters, "chapters")
@@ -49,7 +49,7 @@
     % endif
 </%def>
 <div class="header">
-    <h1>${story.title}</h1> by <h2>${story.author["name"]}</h2>
+    <h1>${story.title}</h1> by <h2>${story.author.name}</h2>
 </div>
 <div class="titlepage">
     % for data in metadata:

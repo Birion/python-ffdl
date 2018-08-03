@@ -2,7 +2,7 @@ import pytest
 import requests
 from bs4 import BeautifulSoup
 
-from ffdl.story import Story
+from pyffdl.sites.story import Story
 
 
 @pytest.mark.parametrize("exception,url", [
@@ -14,7 +14,6 @@ from ffdl.story import Story
 def test_check_setup(exception, url):
     with pytest.raises(exception):
         story = Story(url)
-        story.setup()
 
 
 def test_check_empty_setup():
@@ -25,4 +24,3 @@ def test_check_empty_setup():
 def test_check_setup_with_nonexistent_url():
     with pytest.raises(SystemExit):
         story = Story("http://httpbin.org/status/404")
-        story.setup()

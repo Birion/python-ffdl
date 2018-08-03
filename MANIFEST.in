@@ -1,3 +1,2 @@
-include ffdl/title.mako
-include ffdl/style.css
-include ffdl/style.scss
+include pyffdl/data/title.mako
+include pyffdl/data/style.css
