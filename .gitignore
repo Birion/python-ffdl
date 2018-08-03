@@ -97,3 +97,5 @@ ENV/
 
 *.epub
 .idea/
+/ffdl.py
+.pytest_cache/

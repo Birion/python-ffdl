@@ -1,5 +1,5 @@
 import pytest
-from ffdl.misc import *
+from pyffdl.utilities.misc import *
 
 
 def test_list2text():
@@ -19,3 +19,8 @@ def test_in_dictionary():
     assert not in_dictionary(dic, "bar")
     assert in_dictionary(dic, "1") == 1
     assert in_dictionary(dic, 1) == "1"
+
+
+def test_strlen():
+    assert strlen([]) == 1
+    assert strlen(list(range(10))) == 2

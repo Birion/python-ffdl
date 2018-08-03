@@ -25,7 +25,7 @@ GENRES = [
     "Supernatural",
     "Suspense",
     "Tragedy",
-    "Western"
+    "Western",
 ]
 LANGUAGES = [x["name"] for x in data]
 
@@ -40,15 +40,15 @@ def list2text(input_list: List[str]) -> str:
         return ", ".join(input_list)
 
 
-def dictionarise(data: List[str]) -> dict:
+def turn_into_dictionary(input_data: List[str]) -> dict:
     """
     Transform a list with fic data into a dictionary.
     """
     dic = {}
     key, val = None, None
-    for index, i in enumerate(data):
+    for index, i in enumerate(input_data):
         if ":" in i:
-            _ = [x.strip() for x in i.split(":")]
+            _ = [x.strip() for x in i.split(": ")]
             key = _[0]
             val = _[1] if not _[1].isdigit() else int(_[1])
         else:
@@ -82,3 +82,7 @@ def get_url_from_file(file: str) -> str:
     if not url:
         url = parsed_text
     return url("a")[0]["href"]
+
+
+def strlen(data: data) -> int:
+    return len(str(len(data)))

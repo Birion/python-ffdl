@@ -1,16 +1,15 @@
-#!/usr/bin/env python3
+from typing import Tuple
 
 import click
 from furl import furl
-from typing import Tuple
 
-from ffdl import FanFictionNetStory, AdultFanFictionStory
-from ffdl.misc import list2text, get_url_from_file
+from pyffdl.sites import AdultFanFictionStory, FanFictionNetStory
+from pyffdl.utilities import get_url_from_file, list2text
 
-story_match = {
+AVAILABLE_SITES = {
     "fanfiction.net": FanFictionNetStory,
     "fictionpress.com": FanFictionNetStory,
-    "adult-fanfiction.org": AdultFanFictionStory
+    "adult-fanfiction.org": AdultFanFictionStory,
 }
 
 
@@ -28,13 +27,11 @@ def cli(update: str, urls: str, url_list: Tuple[str, ...]) -> None:
                 url_s.append(url.strip("\n"))
     for address in url_s:
         host = ".".join(furl(address).host.split(".")[-2:])
-        available_url_list = list(story_match.keys())
+        available_url_list = list(AVAILABLE_SITES.keys())
         if host in available_url_list:
-            story = story_match[host](address)
+            story = AVAILABLE_SITES[host](address)
             story.run()
         else:
-            click.echo(__file__ + " is currently only able to download from " + list2text(available_url_list) + ".")
-
-
-if __name__ == '__main__':
-    cli()
+            click.echo(
+                f"{__file__} is currently only able to download from {list2text(available_url_list)}."
+            )
