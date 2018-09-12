@@ -39,7 +39,7 @@
 <%def name="is_url(data, url)">
     % if url:
         <a href="${data}">${data}</a>
-        %else:
+    %else:
         ${data}
     % endif
 </%def>
@@ -53,8 +53,14 @@
 </div>
 <div class="titlepage">
     % for data in metadata:
-        ${print_metadata(*data)}
+        % if data[1]:
+            ${print_metadata(*data)}
+        % endif
     % endfor
-
-    <div><strong>Summary:</strong><p>${story.summary}</p></div>
+    % if story.summary:
+        <div>
+            <strong>Summary:</strong>
+            <p>${story.summary}</p>
+        </div>
+    % endif
 </div>
