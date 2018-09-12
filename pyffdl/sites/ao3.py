@@ -15,18 +15,22 @@ from pyffdl.utilities import in_dictionary, turn_into_dictionary
 class ArchiveOfOurOwnStory(Story):
     def __init__(self, url: str) -> None:
         super(ArchiveOfOurOwnStory, self).__init__(url)
+        if "chapters" not in self.url.path.segments:
+            self.url.path.segments += ["chapters", "123456"]
+        if self.url.path.segments[-1] == "chapters":
+            self.url.path.segments += ["123456"]
 
     @staticmethod
     def get_raw_text(page: Response) -> str:
         """
         Returns only the text of the chapter
         """
+        soup = BeautifulSoup(page.content, "html5lib")
+        div = soup.find("div", class_="userstuff module")
+        p = div.find("p")
         raw_text = "".join(
             sub(r"\s+", " ", str(x).strip())
-            for x in BeautifulSoup(page.content, "html5lib")
-            .find("div", class_="userstuff module")
-            .find("p")
-            .contents
+            for x in p.contents
         )
         clean_text = sub("<br/><br/>", "</p><p>", raw_text)
         return "<p>" + clean_text + "</p>"
@@ -77,9 +81,6 @@ class ArchiveOfOurOwnStory(Story):
         self.metadata.category = ", ".join(find_with_class("fandom"))
         self.metadata.tags = find_with_class("freeform")
 
-        print(find_with_class("character"))
-        print(find_with_class("relationship"))
-
         characters = find_with_class("character")
         couples = [x.split("/") for x in find_with_class("relationship")]
         _not_singles = {character for couple in couples for character in couple}
@@ -88,8 +89,6 @@ class ArchiveOfOurOwnStory(Story):
             "couples": couples,
             "singles": [character for character in characters if character not in _not_singles]
         }
-
-        print(self.metadata.characters)
 
         clean_title = sub(rf"{self.ILLEGAL_CHARACTERS}", "_", self.metadata.title)
         self.filename = f"{self.metadata.author.name} - {clean_title}.epub"
