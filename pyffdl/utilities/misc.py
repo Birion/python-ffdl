@@ -84,5 +84,5 @@ def get_url_from_file(file: str) -> str:
     return url("a")[0]["href"]
 
 
-def strlen(data: data) -> int:
+def strlen(data: list) -> int:
     return len(str(len(data)))

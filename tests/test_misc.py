@@ -24,3 +24,5 @@ def test_in_dictionary():
 def test_strlen():
     assert strlen([]) == 1
     assert strlen(list(range(10))) == 2
+    with pytest.raises(TypeError):
+        strlen(10)
