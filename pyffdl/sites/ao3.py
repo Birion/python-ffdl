@@ -82,7 +82,10 @@ class ArchiveOfOurOwnStory(Story):
         self.metadata.tags = find_with_class("freeform")
 
         characters = find_with_class("character")
-        couples = [x.split("/") for x in find_with_class("relationship")]
+        try:
+            couples = [x.split("/") for x in find_with_class("relationship")]
+        except AttributeError:
+            couples = []
         _not_singles = {character for couple in couples for character in couple}
 
         self.metadata.characters = {
