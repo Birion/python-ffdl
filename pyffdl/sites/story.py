@@ -70,8 +70,8 @@ class Story:
         self.main_page = BeautifulSoup(main_page_request.content, "html5lib")
 
     def run(self):
-        self.make_title_page()
         self.get_chapters()
+        self.make_title_page()
         self.make_ebook()
 
     def prepare_style(self, filename: str) -> EpubItem:
@@ -120,7 +120,11 @@ class Story:
         )
 
         for index, title in enumerate(self.metadata.chapters):
-            url = self.make_new_chapter_url(self.url.copy(), index + 1)
+            try:
+                url_segment, title = title
+            except ValueError:
+                url_segment = index + 1
+            url = self.make_new_chapter_url(self.url.copy(), url_segment)
             header = f"<h1>{title}</h1>"
             raw_chapter = self.session.get(url)
             text = header + self.get_raw_text(raw_chapter)

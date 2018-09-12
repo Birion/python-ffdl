@@ -3,13 +3,14 @@ from typing import Tuple
 import click
 from furl import furl
 
-from pyffdl.sites import AdultFanFictionStory, FanFictionNetStory
+from pyffdl.sites import AdultFanFictionStory, FanFictionNetStory, ArchiveOfOurOwnStory
 from pyffdl.utilities import get_url_from_file, list2text
 
 AVAILABLE_SITES = {
     "fanfiction.net": FanFictionNetStory,
     "fictionpress.com": FanFictionNetStory,
     "adult-fanfiction.org": AdultFanFictionStory,
+    "archiveofourown.org": ArchiveOfOurOwnStory,
 }
 
 
