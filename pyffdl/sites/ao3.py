@@ -1,6 +1,6 @@
 from datetime import date
 from re import compile, sub
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import pendulum
 from bs4 import BeautifulSoup, Tag
@@ -50,34 +50,46 @@ class ArchiveOfOurOwnStory(Story):
         Parses the main page for information about the story and author.
         """
 
-        def find_with_class(cls: str, elem: str = "dd") -> str:
+        def find_with_class(cls: str, elem: str = "dd") -> list:
             _header = self.main_page.find("dl", class_="work meta group")
-            _strings = "".join(x for x in _header.find(elem, class_=cls).stripped_strings)
+            _strings = [x for x in _header.find(elem, class_=cls).stripped_strings if x != ""]
             return _strings
 
         _author = self.main_page.find("a", rel="author")
+        _chapters = find_with_class("chapters")[0].split("/")
+        self.metadata.complete = False
+        if _chapters[-1].isdigit():
+            if int(_chapters[0]) == len(self.metadata.chapters):
+                self.metadata.complete = True
 
         self.metadata.title = self.main_page.find("h2", class_="title heading").string.strip()
         self.metadata.author.name = _author.string
         self.metadata.author.url = self.url.copy().set(path=_author["href"])
-        self.metadata.rating = find_with_class("rating")
-        self.metadata.complete = int(find_with_class("chapters").split("/")[0]) == len(self.metadata.chapters)
-        self.metadata.updated = pendulum.parse(find_with_class("status")) if self.metadata.complete else None
-        self.metadata.published = pendulum.parse(find_with_class("published"))
-        self.metadata.language = find_with_class("language")
-        self.metadata.words = int(find_with_class("words"))
+        self.metadata.rating = find_with_class("rating")[0]
+        self.metadata.updated = pendulum.parse(find_with_class("status")[0])
+        self.metadata.published = pendulum.parse(find_with_class("published")[0])
+        if self.metadata.updated == self.metadata.published:
+            self.metadata.updated = None
+        self.metadata.language = find_with_class("language")[0]
+        self.metadata.words = int(find_with_class("words")[0])
         self.metadata.summary = None
         self.metadata.genres = None
-        self.metadata.category = find_with_class("fandom")
+        self.metadata.category = ", ".join(find_with_class("fandom"))
+        self.metadata.tags = find_with_class("freeform")
 
-        characters = [x.strip() for x in find_with_class("character").split(",")]
-        couples = [x.split("/") for x in find_with_class("relationship").split(",")]
+        print(find_with_class("character"))
+        print(find_with_class("relationship"))
+
+        characters = find_with_class("character")
+        couples = [x.split("/") for x in find_with_class("relationship")]
         _not_singles = {character for couple in couples for character in couple}
 
         self.metadata.characters = {
             "couples": couples,
             "singles": [character for character in characters if character not in _not_singles]
         }
+
+        print(self.metadata.characters)
 
         clean_title = sub(rf"{self.ILLEGAL_CHARACTERS}", "_", self.metadata.title)
         self.filename = f"{self.metadata.author.name} - {clean_title}.epub"
