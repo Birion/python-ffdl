@@ -28,11 +28,8 @@ class ArchiveOfOurOwnStory(Story):
         soup = BeautifulSoup(page.content, "html5lib")
         div = soup.find("div", class_="userstuff module")
         p = div.find("p")
-        raw_text = "".join(
-            sub(r"\s+", " ", str(x).strip())
-            for x in p.contents
-        )
-        clean_text = sub("<br/><br/>", "</p><p>", raw_text)
+        raw_text = "".join(sub(r"\s+", " ", str(x)) for x in p.contents)
+        clean_text = sub(r"\s*<br/>\s*<br/>\s*", "</p><p>", raw_text)
         return "<p>" + clean_text + "</p>"
 
     def get_chapters(self) -> None:
@@ -56,7 +53,9 @@ class ArchiveOfOurOwnStory(Story):
 
         def find_with_class(cls: str, elem: str = "dd") -> list:
             _header = self.main_page.find("dl", class_="work meta group")
-            _strings = [x for x in _header.find(elem, class_=cls).stripped_strings if x != ""]
+            _strings = [
+                x for x in _header.find(elem, class_=cls).stripped_strings if x != ""
+            ]
             return _strings
 
         _author = self.main_page.find("a", rel="author")
@@ -66,7 +65,9 @@ class ArchiveOfOurOwnStory(Story):
             if int(_chapters[0]) == len(self.metadata.chapters):
                 self.metadata.complete = True
 
-        self.metadata.title = self.main_page.find("h2", class_="title heading").string.strip()
+        self.metadata.title = self.main_page.find(
+            "h2", class_="title heading"
+        ).string.strip()
         self.metadata.author.name = _author.string
         self.metadata.author.url = self.url.copy().set(path=_author["href"])
         self.metadata.rating = find_with_class("rating")[0]
@@ -90,7 +91,9 @@ class ArchiveOfOurOwnStory(Story):
 
         self.metadata.characters = {
             "couples": couples,
-            "singles": [character for character in characters if character not in _not_singles]
+            "singles": [
+                character for character in characters if character not in _not_singles
+            ],
         }
 
         clean_title = sub(rf"{self.ILLEGAL_CHARACTERS}", "_", self.metadata.title)
