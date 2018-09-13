@@ -10,3 +10,6 @@ git checkout dev
 git merge --no-ff release-${CURRENTVERSION}
 
 git branch -d release-${CURRENTVERSION}
+
+git push origin dev
+git push origin master
