@@ -99,3 +99,4 @@ ENV/
 .idea/
 /bin/ffdl.py
 .pytest_cache/
+/ffdl.py

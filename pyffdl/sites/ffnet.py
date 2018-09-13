@@ -34,11 +34,11 @@ class FanFictionNetStory(Story):
         """
         Gets the number of chapters and the base template for chapter URLs
         """
-        list_of_chapters = self.main_page.find("select", id="chap_select")
+        list_of_chapters = self.main_page.find("select", id="chap_select")("option")
 
         if list_of_chapters:
             self.metadata.chapters = [
-                sub(r"\d+\. ", "", x.string) for x in list_of_chapters("option")
+                sub(r"\d+\. ", "", x.text) for x in list_of_chapters
             ]
         else:
             self.metadata.chapters = [self.metadata.title]
