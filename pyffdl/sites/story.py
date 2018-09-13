@@ -1,8 +1,7 @@
 from datetime import date
-from os.path import dirname, join
 from pathlib import Path
 from sys import exit
-from typing import Dict, List
+from typing import Iterator, List
 from uuid import uuid4
 
 import attr
@@ -110,7 +109,7 @@ class Story:
         """
         pass
 
-    def step_through_chapters(self) -> None:
+    def step_through_chapters(self) -> Iterator[EpubHtml]:
         """
         Runs through the list of chapters and downloads each one.
         """
