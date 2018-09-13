@@ -1,2 +1,3 @@
 include pyffdl/data/title.mako
 include pyffdl/data/style.css
+include README.md
