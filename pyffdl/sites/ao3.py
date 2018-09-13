@@ -27,10 +27,13 @@ class ArchiveOfOurOwnStory(Story):
         """
         soup = BeautifulSoup(page.content, "html5lib")
         div = soup.find("div", class_="userstuff module")
-        p = [x for x in div.find_all("p") if x.contents][0]
-        raw_text = "".join(sub(r"\s+", " ", str(x)) for x in p.contents)
-        clean_text = sub(r"\s*<br/>\s*<br/>\s*", "</p><p>", raw_text)
-        return "<p>" + clean_text + "</p>"
+        par = [x for x in div.find_all("p") if x.contents][0]
+        raw_text = "".join(sub(r"\s+", " ", str(x)) for x in par.contents)
+        clean_text = "<p>" + sub(r"\s*<br/>\s*<br/>\s*", "</p><p>", raw_text) + "</p>"
+        parsed_text = BeautifulSoup(clean_text, "html5lib")
+        for tag in parsed_text.find_all("p", string=re.compile(r"^(?P<a>.)(?P=a)+$")):
+            tag["class"] = "center"
+        return "".join(str(x) for x in parsed_text.body.contents)
 
     def get_chapters(self) -> None:
         """
