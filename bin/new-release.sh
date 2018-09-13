@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION=${1}
+VERSION=$(./bin/fix-version.py ${1})
 
 [[ ${VERSION} ]] && echo ${VERSION} || exit 1
 
