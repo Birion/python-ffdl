@@ -22,25 +22,22 @@ AVAILABLE_SITES = {
 
 
 @click.command()
-@click.option("--update", type=click.Path())
-@click.option("--urls", type=click.Path())
+@click.option("--update", type=click.Path(dir_okay=False, exists=True))
+@click.option("--urls", type=click.File())
 @click.version_option(version=__version__)
 @click.argument("url_list", nargs=-1)
-def cli(update: str, urls: str, url_list: Tuple[str, ...]) -> None:
-    url_s = list(url_list)
+def cli(update: click.Path, urls: click.File, url_list: Tuple[str, ...]) -> None:
+    url_list = [x for x in url_list]
     if update:
-        url_s.append(get_url_from_file(update))
+        url_list.append(get_url_from_file(update))
     if urls:
-        with open(urls) as url_file:
-            for url in url_file.readlines():
-                url_s.append(url.strip("\n"))
-    for address in url_s:
+        url_list += [x.strip("\n") for x in urls.readlines()]
+    for address in url_list:
         host = ".".join(furl(address).host.split(".")[-2:])
-        available_url_list = list(AVAILABLE_SITES.keys())
-        if host in available_url_list:
+        if host in AVAILABLE_SITES.keys():
             story = AVAILABLE_SITES[host](address)
             story.run()
         else:
             click.echo(
-                f"{__file__} is currently only able to download from {list2text(available_url_list)}."
+                f"{__file__} is currently only able to download from {list2text(AVAILABLE_SITES.keys())}."
             )
