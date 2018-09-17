@@ -3,6 +3,7 @@ from typing import Tuple
 import click
 from furl import furl
 
+from pyffdl.__version__ import __version__
 from pyffdl.sites import (
     AdultFanFictionStory,
     ArchiveOfOurOwnStory,
@@ -23,6 +24,7 @@ AVAILABLE_SITES = {
 @click.command()
 @click.option("--update", type=click.Path())
 @click.option("--urls", type=click.Path())
+@click.version_option(version=__version__)
 @click.argument("url_list", nargs=-1)
 def cli(update: str, urls: str, url_list: Tuple[str, ...]) -> None:
     url_s = list(url_list)
