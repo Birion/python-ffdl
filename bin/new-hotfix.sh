@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+git checkout master
+
 VERSION=$(./bin/hotfix-version.py)
 
 [[ ${VERSION} ]] && echo ${VERSION} || exit 1
