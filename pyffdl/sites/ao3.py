@@ -26,10 +26,22 @@ class ArchiveOfOurOwnStory(Story):
         Returns only the text of the chapter
         """
         soup = BeautifulSoup(page.content, "html5lib")
-        div = soup.find("div", class_="userstuff module")
-        par = [x for x in div.find_all("p") if x.contents][0]
-        raw_text = "".join(sub(r"\s+", " ", str(x)) for x in par.contents)
-        clean_text = "<p>" + sub(r"\s*<br/>\s*<br/>\s*", "</p><p>", raw_text) + "</p>"
+        div = soup.find("div", class_="chapter")
+        par = [
+            tag
+            for contents in div("div")
+            for tag in contents.children
+            if isinstance(tag, Tag)
+            and tag.name != "div"
+            and tag.text != "Chapter Text"
+            and (
+                "class" not in tag.attrs
+                or "class" in tag.attrs
+                and "title" not in tag["class"]
+            )
+        ]
+        raw_text = "".join(sub(r"\s+", " ", str(x)) for x in par)
+        clean_text = sub(r"\s*<br/>\s*<br/>\s*", "</p><p>", raw_text)
         parsed_text = BeautifulSoup(clean_text, "html5lib")
         for tag in parsed_text.find_all("p", string=compile(r"^(?P<a>.)(?P=a)+$")):
             tag["class"] = "center"
