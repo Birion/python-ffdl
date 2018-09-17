@@ -31,7 +31,7 @@ class ArchiveOfOurOwnStory(Story):
         raw_text = "".join(sub(r"\s+", " ", str(x)) for x in par.contents)
         clean_text = "<p>" + sub(r"\s*<br/>\s*<br/>\s*", "</p><p>", raw_text) + "</p>"
         parsed_text = BeautifulSoup(clean_text, "html5lib")
-        for tag in parsed_text.find_all("p", string=re.compile(r"^(?P<a>.)(?P=a)+$")):
+        for tag in parsed_text.find_all("p", string=compile(r"^(?P<a>.)(?P=a)+$")):
             tag["class"] = "center"
         return "".join(str(x) for x in parsed_text.body.contents)
 
