@@ -55,11 +55,16 @@ class ArchiveOfOurOwnStory(Story):
         """
 
         def find_with_class(cls: str, elem: str = "dd") -> list:
-            _header = self.main_page.find("dl", class_="work meta group")
-            _strings = [
-                x for x in _header.find(elem, class_=cls).stripped_strings if x != ""
-            ]
-            return _strings
+            try:
+                _header = self.main_page.find("dl", class_="work meta group")
+                _strings = [
+                    x
+                    for x in _header.find(elem, class_=cls).stripped_strings
+                    if x != ""
+                ]
+                return _strings
+            except AttributeError:
+                return []
 
         _author = self.main_page.find("a", rel="author")
         _chapters = find_with_class("chapters")[0].split("/")
