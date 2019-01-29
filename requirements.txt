@@ -1,9 +1,9 @@
 attrs>=18
 beautifulsoup4
-click>=6
-ebooklib>=0.16
+click>=7
+ebooklib>=0.17
 furl>=1
-html5lib>0.9999
+html5lib>1
 iso639>=0.1
 mako>=1
 pendulum>=2
