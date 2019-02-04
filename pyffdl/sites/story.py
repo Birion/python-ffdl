@@ -1,6 +1,8 @@
 from datetime import date
+from io import BytesIO
 from pathlib import Path
 from sys import exit
+from tempfile import TemporaryFile
 from typing import Iterator, List
 from uuid import uuid4
 
@@ -15,6 +17,7 @@ from mako.template import Template
 from requests import Response, Session, codes
 
 from pyffdl.utilities.misc import strlen
+from pyffdl.utilities.covers import make_cover
 
 
 @attr.s
@@ -163,6 +166,11 @@ class Story:
 
         book.toc = [x for x in self.step_through_chapters()]
 
+        with BytesIO() as b:
+            cover_image = make_cover(self.datasource, self.metadata.title, self.metadata.author.name)
+            cover_image.save(b, format="jpeg")
+            book.set_cover("cover.jpg", b.getvalue())
+
         tmpl_file = self.datasource / "title.mako"
 
         template = Template(filename=str(tmpl_file))
@@ -188,5 +196,6 @@ class Story:
             book.spine.append(c)
 
         book.spine.append("nav")
+        book.spine.insert(0, "cover")
 
         self.write_bookfile(book)

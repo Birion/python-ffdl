@@ -16,6 +16,7 @@ pendulum = ">=2"
 requests = ">=2"
 EbookLib = ">=0.17"
 Mako = ">=1"
+pillow = ">=5.4"
 
 [requires]
 python_version = "3.7"
