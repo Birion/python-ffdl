@@ -149,7 +149,7 @@ class Story:
         Create the epub file.
         """
         echo("Writing into " + style(self.filename, bold=True, fg="green"))
-        write_epub(self.filename, book, {"tidyhtml": True})
+        write_epub(self.filename, book, {"tidyhtml": True, "epub3_pages": False})
 
     def make_ebook(self) -> None:
         """
@@ -161,8 +161,10 @@ class Story:
         book.set_language(to_iso639_1(self.metadata.language))
         book.add_author(self.metadata.author.name)
 
+        nav = EpubNav()
+
         book.add_item(EpubNcx())
-        book.add_item(EpubNav())
+        book.add_item(nav)
 
         book.toc = [x for x in self.step_through_chapters()]
 
@@ -171,9 +173,7 @@ class Story:
             cover_image.save(b, format="jpeg")
             book.set_cover("cover.jpg", b.getvalue())
 
-        tmpl_file = self.datasource / "title.mako"
-
-        template = Template(filename=str(tmpl_file))
+        template = Template(filename=str(self.datasource / "title.mako"))
 
         title_page = EpubHtml(
             title=self.metadata.title,
@@ -189,13 +189,12 @@ class Story:
         for s in self.styles:
             book.add_item(s)
 
-        book.spine = [title_page]
+        book.spine = ["cover", title_page]
 
         for c in book.toc:
             book.add_item(c)
             book.spine.append(c)
 
-        book.spine.append("nav")
-        book.spine.insert(0, "cover")
+        book.spine.append(nav)
 
         self.write_bookfile(book)
