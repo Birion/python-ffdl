@@ -10,6 +10,7 @@ from requests import Response
 
 from pyffdl.sites.story import Story
 from pyffdl.utilities import in_dictionary, turn_into_dictionary
+from pyffdl.utilities.misc import clean_text
 
 
 class FanFictionNetStory(Story):
@@ -21,13 +22,10 @@ class FanFictionNetStory(Story):
         """
         Returns only the text of the chapter
         """
-        return "".join(
-            [
-                sub(r"\s+", " ", str(x).strip())
-                for x in BeautifulSoup(page.content, "html5lib")
-                .find("div", class_="storytext")
-                .contents
-            ]
+        return clean_text(
+            BeautifulSoup(page.content, "html5lib")
+            .find("div", class_="storytext")
+            .contents
         )
 
     def get_chapters(self) -> None:

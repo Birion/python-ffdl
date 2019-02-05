@@ -1,8 +1,10 @@
-from typing import List, Union
+from re import sub
+from typing import List, Union, KeysView
 
 from bs4 import BeautifulSoup
 from ebooklib import epub
 from iso639 import data
+from click import Path
 
 GENRES = [
     "Adventure",
@@ -30,7 +32,7 @@ GENRES = [
 LANGUAGES = [x["name"] for x in data]
 
 
-def list2text(input_list: List[str]) -> str:
+def list2text(input_list: Union[KeysView[str], List[str]]) -> str:
     if len(input_list) == 1:
         return input_list[0]
     elif len(input_list) == 2:
@@ -72,7 +74,7 @@ def in_dictionary(dic: dict, key: Union[str, int, tuple]) -> str:
     return dic[key] if key in dic.keys() else None
 
 
-def get_url_from_file(file: str) -> str:
+def get_url_from_file(file: Union[str, Path]) -> str:
     book = epub.read_epub(file)
     title_page = book.get_item_with_id("title")
     if not title_page:  # if we're checking old-format ebook
@@ -86,3 +88,7 @@ def get_url_from_file(file: str) -> str:
 
 def strlen(data: list) -> int:
     return len(str(len(data)))
+
+
+def clean_text(text: list) -> str:
+    return "".join(sub(r"\s+", " ", str(x).strip()) for x in text)

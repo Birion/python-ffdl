@@ -100,3 +100,5 @@ ENV/
 /bin/ffdl.py
 .pytest_cache/
 /ffdl.py
+/Pipfile.lock
+/.envrc

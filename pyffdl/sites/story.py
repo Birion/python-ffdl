@@ -1,6 +1,8 @@
 from datetime import date
+from io import BytesIO
 from pathlib import Path
 from sys import exit
+from tempfile import TemporaryFile
 from typing import Iterator, List
 from uuid import uuid4
 
@@ -15,6 +17,7 @@ from mako.template import Template
 from requests import Response, Session, codes
 
 from pyffdl.utilities.misc import strlen
+from pyffdl.utilities.covers import make_cover
 
 
 @attr.s
@@ -45,23 +48,16 @@ class Metadata:
 @attr.s
 class Story:
     url: furl = attr.ib(validator=attr.validators.instance_of(furl), converter=furl)
-    main_page: BeautifulSoup = attr.ib(factory=BeautifulSoup)
-    session: Session = attr.ib(factory=Session)
-    stylefiles: list = attr.ib(default=["style.css"])
-    filename: str = attr.ib(factory=str)
-    metadata: Metadata = attr.ib(default=Metadata)
 
-    styles: list = attr.ib(factory=list)
-    datasource: Path = attr.ib(factory=Path)
-
-    ILLEGAL_CHARACTERS = '[<>:"/\|?]'
+    ILLEGAL_CHARACTERS = r'[<>:"/\|?]'
 
     def __attrs_post_init__(self) -> None:
         self.metadata = Metadata(self.url)
         self.datasource = Path(__file__) / ".." / ".." / "data"
         self.datasource = self.datasource.resolve()
-
-        self.styles = [self.prepare_style(file) for file in self.stylefiles]
+        self.filename = ""
+        self.session = Session()
+        self.css_styles = ["style.css"]
 
         main_page_request = self.session.get(self.url)
         if main_page_request.status_code != codes.ok:
@@ -76,13 +72,16 @@ class Story:
     def prepare_style(self, filename: str) -> EpubItem:
         cssfile = self.datasource / filename
         with cssfile.open() as fp:
-            css = fp.read()
-        return EpubItem(
-            uid=cssfile.stem,
-            file_name=f"style/{cssfile.name}",
-            media_type="text/css",
-            content=css,
-        )
+            return EpubItem(
+                uid=cssfile.stem,
+                file_name=f"style/{cssfile.name}",
+                media_type="text/css",
+                content=fp.read(),
+            )
+
+    @property
+    def styles(self):
+        return [self.prepare_style(file) for file in self.css_styles]
 
     @staticmethod
     def get_raw_text(page: Response) -> str:
@@ -146,7 +145,7 @@ class Story:
         Create the epub file.
         """
         echo("Writing into " + style(self.filename, bold=True, fg="green"))
-        write_epub(self.filename, book, {"tidyhtml": True})
+        write_epub(self.filename, book, {"tidyhtml": True, "epub3_pages": False})
 
     def make_ebook(self) -> None:
         """
@@ -158,14 +157,19 @@ class Story:
         book.set_language(to_iso639_1(self.metadata.language))
         book.add_author(self.metadata.author.name)
 
+        nav = EpubNav()
+
         book.add_item(EpubNcx())
-        book.add_item(EpubNav())
+        book.add_item(nav)
 
         book.toc = [x for x in self.step_through_chapters()]
 
-        tmpl_file = self.datasource / "title.mako"
+        with BytesIO() as b:
+            cover_image = make_cover(self.datasource, self.metadata.title, self.metadata.author.name)
+            cover_image.save(b, format="jpeg")
+            book.set_cover("cover.jpg", b.getvalue())
 
-        template = Template(filename=str(tmpl_file))
+        template = Template(filename=str(self.datasource / "title.mako"))
 
         title_page = EpubHtml(
             title=self.metadata.title,
@@ -176,17 +180,15 @@ class Story:
 
         for s in self.styles:
             title_page.add_item(s)
+            book.add_item(s)
         book.add_item(title_page)
 
-        for s in self.styles:
-            book.add_item(s)
-
-        book.spine = [title_page]
+        book.spine = ["cover", title_page]
 
         for c in book.toc:
             book.add_item(c)
             book.spine.append(c)
 
-        book.spine.append("nav")
+        book.spine.append(nav)
 
         self.write_bookfile(book)

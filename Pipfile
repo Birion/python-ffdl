@@ -1,0 +1,23 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pre-commit = "*"
+
+[packages]
+attrs = ">=18"
+beautifulsoup4 = "*"
+click = ">=7"
+furl = ">=2"
+html5lib = ">1"
+iso639 = ">=0.1"
+pendulum = ">=2"
+requests = ">=2"
+EbookLib = ">=0.17"
+Mako = ">=1"
+pillow = ">=5.4"
+
+[requires]
+python_version = "3.7"
