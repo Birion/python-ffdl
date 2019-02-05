@@ -10,7 +10,7 @@ Fanfiction downloader
 
 ## Usage
 
-`pyffdl.py [--update <FILE>] [<URL>[ <URL>[...]]]`
+`pyffdl.py [--update <EPUB FILE>] [<URL>[ <URL>[...]]]`
 
 ## Supported sites
 
@@ -19,3 +19,12 @@ Fanfiction downloader
 * [fanfiction.net](https://fanfiction.net)
 * [fictionpress.com](https://fictionpress.com)
 * [tthfanfic.org](https://tthfanfic.org)
+
+## TODO
+
+* better covers
+    * by genres?
+* actually `--update` the file when updating
+    * keep the existing chapters/covers
+    * update the titlepage
+* support for old-school html "archives"

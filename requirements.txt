@@ -7,4 +7,5 @@ html5lib>1
 iso639>=0.1
 mako>=1
 pendulum>=2
+pillow>=5.4
 requests>=2
