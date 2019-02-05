@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import List, Tuple
 
 import click
 from furl import furl
@@ -21,18 +21,8 @@ AVAILABLE_SITES = {
 }
 
 
-@click.command()
-@click.option("--update", type=click.Path(dir_okay=False, exists=True))
-@click.option("--urls", type=click.File())
-@click.version_option(version=__version__)
-@click.argument("url_list", nargs=-1)
-def cli(update: click.Path, urls: click.File, url_list: Tuple[str, ...]) -> None:
-    url_list = [x for x in url_list]
-    if update:
-        url_list.append(get_url_from_file(update))
-    if urls:
-        url_list += [x.strip("\n") for x in urls.readlines()]
-    for address in url_list:
+def download(urls: List[str]) -> None:
+    for address in urls:
         host = ".".join(furl(address).host.split(".")[-2:])
         if host in AVAILABLE_SITES.keys():
             story = AVAILABLE_SITES[host](address)
@@ -41,3 +31,25 @@ def cli(update: click.Path, urls: click.File, url_list: Tuple[str, ...]) -> None
             click.echo(
                 f"{__file__} is currently only able to download from {list2text(AVAILABLE_SITES.keys())}."
             )
+
+
+@click.group()
+@click.version_option(version=__version__)
+def cli() -> None:
+    pass
+
+
+@cli.command("download")
+@click.option("-f", "--from", "from_file", type=click.File())
+@click.argument("url_list", nargs=-1)
+def cli_download(from_file: click.File, url_list: Tuple[str, ...]) -> None:
+    urls = [x for x in url_list]
+    if from_file:
+        urls += [x.strip("\n") for x in from_file.readlines()]
+    download(urls)
+
+
+@cli.command("update")
+@click.argument("filename", type=click.Path(dir_okay=False, exists=True))
+def cli_update(filename: click.Path) -> None:
+    download([get_url_from_file(filename)])
