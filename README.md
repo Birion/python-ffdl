@@ -27,4 +27,3 @@ Fanfiction downloader
 * actually `--update` the file when updating
     * keep the existing chapters/covers
     * update the titlepage
-* support for old-school html "archives"
