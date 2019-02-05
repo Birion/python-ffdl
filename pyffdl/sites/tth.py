@@ -12,6 +12,7 @@ import iso639
 
 from pyffdl.sites.story import Story
 from pyffdl.utilities import in_dictionary, turn_into_dictionary
+from pyffdl.utilities.misc import clean_text
 
 
 @attr.s
@@ -53,15 +54,15 @@ class TwistingTheHellmouthStory(Story):
         div = soup.find("div", id="storyinnerbody")
         empty_div = div.find("div", style="clear:both;")
         empty_div.extract()
-        raw_text = "".join(sub(r"\s+", " ", str(x)) for x in div.contents)
-        clean_text = sub(r"\s*(<br/?>){2,}\s*", "</p><p>", raw_text) + "</p>"
-        clean_text = sub(r"<p></p>", "", clean_text)
-        if clean_text.startswith("<"):
-            clean_text = sub(r"(</h\d>)\s*([^<])", r"\1<p>\2", clean_text)
+        raw_text = clean_text(div.contents)
+        _clean_text = sub(r"\s*(<br/?>){2,}\s*", "</p><p>", raw_text) + "</p>"
+        _clean_text = sub(r"<p></p>", "", _clean_text)
+        if _clean_text.startswith("<"):
+            _clean_text = sub(r"(</h\d>)\s*([^<])", r"\1<p>\2", _clean_text)
         else:
-            clean_text = "<p>" + clean_text
+            _clean_text = "<p>" + _clean_text
 
-        return clean_text
+        return _clean_text
 
     def get_chapters(self) -> None:
         """

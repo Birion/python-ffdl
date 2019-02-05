@@ -10,6 +10,7 @@ from requests import Response
 
 from pyffdl.sites.story import Story
 from pyffdl.utilities import in_dictionary, turn_into_dictionary
+from pyffdl.utilities.misc import clean_text
 
 
 class ArchiveOfOurOwnStory(Story):
@@ -27,22 +28,23 @@ class ArchiveOfOurOwnStory(Story):
         """
         soup = BeautifulSoup(page.content, "html5lib")
         div = soup.find("div", class_="chapter")
-        par = [
-            tag
-            for contents in div("div")
-            for tag in contents.children
-            if isinstance(tag, Tag)
-            and tag.name != "div"
-            and tag.text != "Chapter Text"
-            and (
-                "class" not in tag.attrs
-                or "class" in tag.attrs
-                and "title" not in tag["class"]
-            )
-        ]
-        raw_text = "".join(sub(r"\s+", " ", str(x)) for x in par)
-        clean_text = sub(r"\s*<br/>\s*<br/>\s*", "</p><p>", raw_text)
-        parsed_text = BeautifulSoup(clean_text, "html5lib")
+        raw_text = clean_text(
+            [
+                tag
+                for contents in div("div")
+                for tag in contents.children
+                if isinstance(tag, Tag)
+                and tag.name != "div"
+                and tag.text != "Chapter Text"
+                and (
+                    "class" not in tag.attrs
+                    or "class" in tag.attrs
+                    and "title" not in tag["class"]
+                )
+            ]
+        )
+        _clean_text = sub(r"\s*<br/>\s*<br/>\s*", "</p><p>", raw_text)
+        parsed_text = BeautifulSoup(_clean_text, "html5lib")
         for tag in parsed_text.find_all("p", string=compile(r"^(?P<a>.)(?P=a)+$")):
             tag["class"] = "center"
         return "".join(str(x) for x in parsed_text.body.contents)

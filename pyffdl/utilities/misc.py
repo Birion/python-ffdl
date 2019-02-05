@@ -1,3 +1,4 @@
+from re import sub
 from typing import List, Union, KeysView
 
 from bs4 import BeautifulSoup
@@ -87,3 +88,7 @@ def get_url_from_file(file: Union[str, Path]) -> str:
 
 def strlen(data: list) -> int:
     return len(str(len(data)))
+
+
+def clean_text(text: list) -> str:
+    return "".join(sub(r"\s+", " ", str(x).strip()) for x in text)

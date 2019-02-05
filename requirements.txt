@@ -2,7 +2,7 @@ attrs>=18
 beautifulsoup4
 click>=7
 ebooklib>=0.17
-furl>=1
+furl>=2
 html5lib>1
 iso639>=0.1
 mako>=1

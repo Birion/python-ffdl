@@ -48,23 +48,16 @@ class Metadata:
 @attr.s
 class Story:
     url: furl = attr.ib(validator=attr.validators.instance_of(furl), converter=furl)
-    main_page: BeautifulSoup = attr.ib(factory=BeautifulSoup)
-    session: Session = attr.ib(factory=Session)
-    stylefiles: list = attr.ib(default=["style.css"])
-    filename: str = attr.ib(factory=str)
-    metadata: Metadata = attr.ib(default=Metadata)
 
-    styles: list = attr.ib(factory=list)
-    datasource: Path = attr.ib(factory=Path)
-
-    ILLEGAL_CHARACTERS = '[<>:"/\|?]'
+    ILLEGAL_CHARACTERS = r'[<>:"/\|?]'
 
     def __attrs_post_init__(self) -> None:
         self.metadata = Metadata(self.url)
         self.datasource = Path(__file__) / ".." / ".." / "data"
         self.datasource = self.datasource.resolve()
-
-        self.styles = [self.prepare_style(file) for file in self.stylefiles]
+        self.filename = ""
+        self.session = Session()
+        self.css_styles = ["style.css"]
 
         main_page_request = self.session.get(self.url)
         if main_page_request.status_code != codes.ok:
@@ -79,13 +72,16 @@ class Story:
     def prepare_style(self, filename: str) -> EpubItem:
         cssfile = self.datasource / filename
         with cssfile.open() as fp:
-            css = fp.read()
-        return EpubItem(
-            uid=cssfile.stem,
-            file_name=f"style/{cssfile.name}",
-            media_type="text/css",
-            content=css,
-        )
+            return EpubItem(
+                uid=cssfile.stem,
+                file_name=f"style/{cssfile.name}",
+                media_type="text/css",
+                content=fp.read(),
+            )
+
+    @property
+    def styles(self):
+        return [self.prepare_style(file) for file in self.css_styles]
 
     @staticmethod
     def get_raw_text(page: Response) -> str:
@@ -184,10 +180,8 @@ class Story:
 
         for s in self.styles:
             title_page.add_item(s)
-        book.add_item(title_page)
-
-        for s in self.styles:
             book.add_item(s)
+        book.add_item(title_page)
 
         book.spine = ["cover", title_page]
 
