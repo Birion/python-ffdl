@@ -2,13 +2,12 @@ from datetime import date
 from io import BytesIO
 from pathlib import Path
 from sys import exit
-from tempfile import TemporaryFile
-from typing import Iterator, List
+from typing import Iterator, List, Union, Tuple
 from uuid import uuid4
 
 import attr
 import pendulum
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from click import echo, style
 from ebooklib.epub import EpubBook, EpubHtml, EpubItem, EpubNav, EpubNcx, write_epub
 from furl import furl
@@ -16,8 +15,8 @@ from iso639 import to_iso639_1
 from mako.template import Template
 from requests import Response, Session, codes
 
+from pyffdl.utilities.covers import Cover
 from pyffdl.utilities.misc import strlen
-from pyffdl.utilities.covers import make_cover
 
 
 @attr.s
@@ -65,8 +64,8 @@ class Story:
         self.main_page = BeautifulSoup(main_page_request.content, "html5lib")
 
     def run(self):
-        self.get_chapters()
         self.make_title_page()
+        self.get_chapters()
         self.make_ebook()
 
     def prepare_style(self, filename: str) -> EpubItem:
@@ -90,11 +89,20 @@ class Story:
         """
         pass
 
+    @staticmethod
+    def chapter_parser(value: Tag) -> Union[str, Tuple[int, str]]:
+        return sub(r"\d+\.\s+", "", value.text)
+
     def get_chapters(self) -> None:
         """
         Gets the number of chapters and the base template for chapter URLs
         """
-        pass
+        list_of_chapters = self.main_page.select(self.chapter_select)
+
+        if list_of_chapters:
+            self.metadata.chapters = [self.chapter_parser(x) for x in list_of_chapters]
+        else:
+            self.metadata.chapters = [self.metadata.title]
 
     def make_title_page(self) -> None:
         """
@@ -165,8 +173,11 @@ class Story:
         book.toc = [x for x in self.step_through_chapters()]
 
         with BytesIO() as b:
-            cover_image = make_cover(self.datasource, self.metadata.title, self.metadata.author.name)
-            cover_image.save(b, format="jpeg")
+            cover = Cover.create(
+                self.metadata.title, self.metadata.author.name, self.datasource
+            )
+            cover.run()
+            cover.image.save(b, format="jpeg")
             book.set_cover("cover.jpg", b.getvalue())
 
         template = Template(filename=str(self.datasource / "title.mako"))

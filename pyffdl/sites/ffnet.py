@@ -3,7 +3,7 @@ from re import compile, sub
 from typing import Dict, List
 
 import pendulum
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from click import echo
 from furl import furl
 from requests import Response
@@ -16,6 +16,7 @@ from pyffdl.utilities.misc import clean_text
 class FanFictionNetStory(Story):
     def __init__(self, url: str) -> None:
         super(FanFictionNetStory, self).__init__(url)
+        self.chapter_select = "select#chap_select option"
 
     @staticmethod
     def get_raw_text(page: Response) -> str:
@@ -27,19 +28,6 @@ class FanFictionNetStory(Story):
             .find("div", class_="storytext")
             .contents
         )
-
-    def get_chapters(self) -> None:
-        """
-        Gets the number of chapters and the base template for chapter URLs
-        """
-        list_of_chapters = self.main_page.find("select", id="chap_select")("option")
-
-        if list_of_chapters:
-            self.metadata.chapters = [
-                sub(r"\d+\. ", "", x.text) for x in list_of_chapters
-            ]
-        else:
-            self.metadata.chapters = [self.metadata.title]
 
     def make_title_page(self) -> None:
         """

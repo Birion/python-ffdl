@@ -7,10 +7,17 @@ Fanfiction downloader
 
 `$ pip install git+ssh://git@github.com/Birion/python-ffdl.git@master`
 
-
 ## Usage
 
-`pyffdl.py [--update <EPUB FILE>] [<URL>[ <URL>[...]]]`
+### Download a new story
+
+`pyffdl download [--from <URL FILE>] [<URL>[ <URL>[...]]]`
+
+`pyffdl simple --author <NAME> --title <TITLE> [--from <URL FILE>] [<CHAPTER URL>[ <CHAPTER URL>[...]]]`
+
+### Update an existing story file
+
+`pyffdl.py update <EPUB FILE>`
 
 ## Supported sites
 
@@ -27,3 +34,4 @@ Fanfiction downloader
 * actually `--update` the file when updating
     * keep the existing chapters/covers
     * update the titlepage
+* actually useful tests

@@ -3,7 +3,7 @@ from datetime import date
 from re import sub
 
 import pendulum
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from click import echo, style
 from ebooklib.epub import EpubHtml
 from furl import furl
@@ -15,6 +15,7 @@ from pyffdl.sites.story import Story
 class AdultFanFictionStory(Story):
     def __init__(self, url: str) -> None:
         super(AdultFanFictionStory, self).__init__(url)
+        self.chapter_select = "table:nth-of-type(3) .dropdown-content a"
 
     @staticmethod
     def get_raw_text(page: Response) -> str:
@@ -36,18 +37,9 @@ class AdultFanFictionStory(Story):
             contents = sub(r"<p></p>", "", contents)
             return contents
 
-    def get_chapters(self) -> None:
-        """
-        Gets the number of chapters and the base template for chapter URLs
-        """
-        list_of_chapters = self.main_page("table")[2].find(class_="dropdown-content")(
-            "a"
-        )
-
-        if list_of_chapters:
-            self.metadata.chapters = [x.string.split("-")[-1] for x in list_of_chapters]
-        else:
-            self.metadata.chapters = [self.metadata.title]
+    @staticmethod
+    def chapter_parser(value: Tag) -> str:
+        return value.string.split("-")[-1]
 
     def make_title_page(self) -> None:
         """
