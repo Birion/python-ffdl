@@ -44,6 +44,7 @@ class TwistingTheHellmouthStory(Story):
         self.story_id = match(
             r"Story-(?P<story>\d+)(-\d+)?", self.url.path.segments[0]
         ).group("story")
+        self.chapter_select = "select#chapnav option"
 
     @staticmethod
     def get_raw_text(page: Response) -> str:
@@ -63,18 +64,6 @@ class TwistingTheHellmouthStory(Story):
             _clean_text = "<p>" + _clean_text
 
         return _clean_text
-
-    def get_chapters(self) -> None:
-        """
-        Gets the number of chapters and the base template for chapter URLs
-        """
-        try:
-            list_of_chapters = self.main_page.find("select", id="chapnav")("option")
-            self.metadata.chapters = [
-                sub(r"^\d+\.\s+", "", x.text) for x in list_of_chapters
-            ]
-        except TypeError:
-            self.metadata.chapters = None
 
     def make_title_page(self) -> None:
         """

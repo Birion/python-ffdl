@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFont
 
 
 @attr.s(auto_attribs=True)
-class Title(object):
+class Title:
     text: str
     width: int
     height: int
@@ -16,43 +16,58 @@ class Title(object):
         return cls(text, *font.getsize_multiline(text))
 
 
-def write_text(img: Image, font: ImageFont, title: Title, offset: int = 2) -> None:
-    draw = ImageDraw.Draw(img)
-    colour_fill = "white"
-    colour_shadow = "black"
+@attr.s(auto_attribs=True)
+class Cover:
+    image_file: Path
+    font_file: Path
+    title: str
+    author: str
 
-    width, height = img.size
+    ENHANCERS = [ImageEnhance.Color, ImageEnhance.Sharpness]
 
-    _x = (width - title.width) / 2
-    _y = (height - title.height) / 2
+    def __attrs_post_init__(self):
+        self.text = "\n\n".join((self.title, self.author))
+        self.image = Image.open(self.image_file)
+        self.font = ImageFont.truetype(str(self.font_file), int(800 / len(self.text)))
+        self.title = Title.from_text(self.text, self.font)
+        self.width, self.height = self.image.size
 
-    for x in range(-offset, offset + 1):
-        for y in range(-offset, offset + 1):
-            draw.multiline_text((_x - x, _y - y), title.text, font=font, fill=colour_shadow, align="center")
+        if random.randint(0, 10) % 2:
+            self.image = self._enhance()
 
-    draw.multiline_text((_x, _y), title.text, font=font, fill=colour_fill, align="center")
+    def run(self):
+        self._write()
 
+    @classmethod
+    def create(
+        cls, title: str, author: str, directory: Path, font: str = "Cormorant-Bold.ttf"
+    ):
+        cover = random.choice(sorted((directory / "covers").glob("*.jpg")))
+        fontfile = directory / "font" / font
+        return cls(cover, fontfile, title, author)
 
-def make_cover(datastore: Path, title: str, author: str) -> Image:
-    covers_dir = datastore / "covers"
-    covers = sorted(covers_dir.glob("*.jpg"))
-    cover = random.choice(covers)
-    fontname = "Cormorant-Bold.ttf"
-    fontfile = datastore / "font" / fontname
-    title_text = f"{title}\n\n{author}"
+    def _enhance(self) -> Image:
+        enhancer = random.choice(self.ENHANCERS)(self.image)
+        return enhancer.enhance(random.randint(5, 8) / 10)
 
-    enhancers = [
-        ImageEnhance.Color,
-        ImageEnhance.Sharpness,
-    ]
+    def _write(self, offset: int = 2) -> None:
+        draw = ImageDraw.Draw(self.image)
+        fill = "white"
+        shadow = "black"
 
-    img = Image.open(str(cover))
-    fnt = ImageFont.truetype(str(fontfile), int(800 / len(title_text)))
+        _x = (self.width - self.title.width) / 2
+        _y = (self.height - self.title.height) / 2
 
-    heading = Title.from_text(title_text, fnt)
-    enhancer = random.choice(enhancers)(img)
-    if random.randint(0, 10) % 2:
-        img = enhancer.enhance(random.randint(5, 8) / 10)
-    write_text(img, fnt, heading, 1)
+        for x in range(-offset, offset + 1):
+            for y in range(-offset, offset + 1):
+                draw.multiline_text(
+                    (_x - x, _y - y),
+                    self.title.text,
+                    font=self.font,
+                    fill=shadow,
+                    align="center",
+                )
 
-    return img
+        draw.multiline_text(
+            (_x, _y), self.title.text, font=self.font, fill=fill, align="center"
+        )
