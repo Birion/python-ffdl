@@ -38,13 +38,15 @@ class Header:
     complete = attr.ib(converter=lambda x: x == "Yes")
 
 
+@attr.s(auto_attribs=True)
 class TwistingTheHellmouthStory(Story):
-    def __init__(self, url: str) -> None:
-        super(TwistingTheHellmouthStory, self).__init__(url)
-        self.story_id = match(
+    _chapter_select: str = attr.ib(init=False, default="select#chapnav option")
+    _story_id: str = attr.ib(init=False)
+
+    def __attrs_post_init__(self):
+        self._story_id = match(
             r"Story-(?P<story>\d+)(-\d+)?", self.url.path.segments[0]
         ).group("story")
-        self.chapter_select = "select#chapnav option"
 
     @staticmethod
     def get_raw_text(page: Response) -> str:
@@ -70,10 +72,10 @@ class TwistingTheHellmouthStory(Story):
         Parses the main page for information about the story and author.
         """
 
-        _header = self.main_page.find(
+        _header = self._main_page.find(
             "div", class_="storysummary formbody defaultcolors"
         )
-        _author = self.main_page.find("a", href=compile(r"^/AuthorStories"))
+        _author = self._main_page.find("a", href=compile(r"^/AuthorStories"))
         _data = Header(
             *[
                 sub(r"\xa0", " ", x.text.strip())
@@ -81,29 +83,31 @@ class TwistingTheHellmouthStory(Story):
             ]
         )
 
-        self.metadata.title = self.main_page.find("h2").string.strip()
-        if not self.metadata.chapters:
-            self.metadata.chapters = [self.metadata.title]
-        self.metadata.author.name = _author.text
-        self.metadata.author.url = self.url.copy().set(path=_author["href"])
-        self.metadata.complete = _data.complete
-        self.metadata.rating = _data.rating
-        self.metadata.updated = _data.updated
-        self.metadata.published = _data.published
-        if self.metadata.updated == self.metadata.published:
-            self.metadata.updated = None
-        self.metadata.language = iso639.to_name(self.main_page.html["lang"])
-        self.metadata.words = _data.words
-        self.metadata.summary = _header.find_all("p")[-1].text
-        self.metadata.genres = None
-        self.metadata.category = _data.category
-        self.metadata.tags = None
+        self._story_metadata._title = self._main_page.find("h2").string.strip()
+        if not self._story_metadata._chapters:
+            self._story_metadata._chapters = [self._story_metadata._title]
+        self._story_metadata._author.name = _author.text
+        self._story_metadata._author.url = self.url.copy().set(path=_author["href"])
+        self._story_metadata._complete = _data.complete
+        self._story_metadata._rating = _data.rating
+        self._story_metadata._updated = _data.updated
+        self._story_metadata._published = _data.published
+        if self._story_metadata._updated == self._story_metadata._published:
+            self._story_metadata._updated = None
+        self._story_metadata._language = iso639.to_name(self._main_page.html["lang"])
+        self._story_metadata._words = _data.words
+        self._story_metadata._summary = _header.find_all("p")[-1].text
+        self._story_metadata._genres = None
+        self._story_metadata._category = _data.category
+        self._story_metadata._tags = None
 
-        self.metadata.characters = {"couples": None, "singles": None}
+        self._story_metadata._characters = {"couples": None, "singles": None}
 
-        clean_title = sub(rf"{self.ILLEGAL_CHARACTERS}", "_", self.metadata.title)
-        self.filename = f"{self.metadata.author.name} - {clean_title}.epub"
+        clean_title = sub(
+            rf"{self.ILLEGAL_CHARACTERS}", "_", self._story_metadata._title
+        )
+        self._filename = f"{self._story_metadata._author.name} - {clean_title}.epub"
 
     def make_new_chapter_url(self, url: furl, value: int) -> furl:
-        url.path.segments[0] = f"Story-{self.story_id}-{value}"
+        url.path.segments[0] = f"Story-{self._story_id}-{value}"
         return url

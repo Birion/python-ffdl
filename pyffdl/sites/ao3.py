@@ -1,26 +1,25 @@
-from datetime import date
 from re import compile, sub
-from typing import Dict, List, Union, Tuple
+from typing import List, Tuple, Union
 
+import attr
 import pendulum
 from bs4 import BeautifulSoup, Tag
-from click import echo
 from furl import furl
 from requests import Response
 
 from pyffdl.sites.story import Story
-from pyffdl.utilities import in_dictionary, turn_into_dictionary
 from pyffdl.utilities.misc import clean_text
 
 
+@attr.s(auto_attribs=True)
 class ArchiveOfOurOwnStory(Story):
-    def __init__(self, url: str) -> None:
-        super(ArchiveOfOurOwnStory, self).__init__(url)
+    _chapter_select: str = attr.ib(init=False, default="select#selected_id option")
+
+    def __attrs_post_init__(self):
         if "chapters" not in self.url.path.segments:
             self.url.path.segments += ["chapters", "123456"]
         if self.url.path.segments[-1] == "chapters":
             self.url.path.segments += ["123456"]
-        self.chapter_select = "select#selected_id option"
 
     @staticmethod
     def get_raw_text(page: Response) -> str:
@@ -62,7 +61,7 @@ class ArchiveOfOurOwnStory(Story):
             cls: str, elem: str = "dd", multi: bool = True
         ) -> Union[List[str], str, None]:
             try:
-                _header = self.main_page.find("dl", class_="work meta group")
+                _header = self._main_page.find("dl", class_="work meta group")
                 _strings = [
                     x
                     for x in _header.find(elem, class_=cls).stripped_strings
@@ -74,33 +73,35 @@ class ArchiveOfOurOwnStory(Story):
             except AttributeError:
                 return []
 
-        _author = self.main_page.find("a", rel="author")
+        _author = self._main_page.find("a", rel="author")
         _chapters = find_with_class("chapters", multi=False).split("/")
-        self.metadata.complete = False
+        self._story_metadata._complete = False
         if _chapters[-1].isdigit():
-            if int(_chapters[0]) == len(self.metadata.chapters):
-                self.metadata.complete = True
+            if int(_chapters[0]) == len(self._story_metadata._chapters):
+                self._story_metadata._complete = True
 
-        self.metadata.title = self.main_page.find(
+        self._story_metadata._title = self._main_page.find(
             "h2", class_="title heading"
         ).string.strip()
-        self.metadata.author.name = _author.string
-        self.metadata.author.url = self.url.copy().set(path=_author["href"])
-        self.metadata.rating = find_with_class("rating", multi=False)
-        self.metadata.updated = find_with_class("status", multi=False)
-        self.metadata.published = pendulum.parse(
+        self._story_metadata._author.name = _author.string
+        self._story_metadata._author.url = self.url.copy().set(path=_author["href"])
+        self._story_metadata._rating = find_with_class("rating", multi=False)
+        self._story_metadata._updated = find_with_class("status", multi=False)
+        self._story_metadata._published = pendulum.parse(
             find_with_class("published", multi=False)
         )
-        if self.metadata.updated:
-            self.metadata.updated = pendulum.parse(self.metadata.updated)
-        if self.metadata.updated == self.metadata.published:
-            self.metadata.updated = None
-        self.metadata.language = find_with_class("language", multi=False)
-        self.metadata.words = int(find_with_class("words", multi=False))
-        self.metadata.summary = None
-        self.metadata.genres = None
-        self.metadata.category = ", ".join(find_with_class("fandom"))
-        self.metadata.tags = find_with_class("freeform")
+        if self._story_metadata._updated:
+            self._story_metadata._updated = pendulum.parse(
+                self._story_metadata._updated
+            )
+        if self._story_metadata._updated == self._story_metadata._published:
+            self._story_metadata._updated = None
+        self._story_metadata._language = find_with_class("language", multi=False)
+        self._story_metadata._words = int(find_with_class("words", multi=False))
+        self._story_metadata._summary = None
+        self._story_metadata._genres = None
+        self._story_metadata._category = ", ".join(find_with_class("fandom"))
+        self._story_metadata._tags = find_with_class("freeform")
 
         characters = find_with_class("character")
         try:
@@ -109,15 +110,17 @@ class ArchiveOfOurOwnStory(Story):
             couples = []
         _not_singles = {character for couple in couples for character in couple}
 
-        self.metadata.characters = {
+        self._story_metadata._characters = {
             "couples": couples,
             "singles": [
                 character for character in characters if character not in _not_singles
             ],
         }
 
-        clean_title = sub(rf"{self.ILLEGAL_CHARACTERS}", "_", self.metadata.title)
-        self.filename = f"{self.metadata.author.name} - {clean_title}.epub"
+        clean_title = sub(
+            rf"{self.ILLEGAL_CHARACTERS}", "_", self._story_metadata._title
+        )
+        self._filename = f"{self._story_metadata._author.name} - {clean_title}.epub"
 
     def make_new_chapter_url(self, url: furl, value: int) -> furl:
         url.path.segments[-1] = value
