@@ -18,7 +18,7 @@
     metadata = [
         ("Story", story._title, "title"),
         ("Author", story._author.name, "author"),
-        ("URL", story._url, "story-url", True),
+        ("URL", story.url, "story-url", True),
         ("Author URL", story._author.url, "author-url", True),
         ("Language", story._language, "lang"),
         ("Rating", story._rating, "rating"),

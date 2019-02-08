@@ -70,7 +70,7 @@ class Story:
 
     @classmethod
     def from_url(cls, url: furl, update=None):
-        return cls(url=url)
+        return cls(url, update)
 
     def _initialise(self):
         self._story_metadata = Metadata.from_url(self.url)
@@ -84,6 +84,9 @@ class Story:
         self.make_title_page()
         self.get_chapters()
         self.make_ebook()
+
+    def update_run(self):
+        self.run()
 
     def prepare_style(self, filename: str) -> EpubItem:
         cssfile = self._datasource / filename
