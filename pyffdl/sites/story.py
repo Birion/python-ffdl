@@ -1,8 +1,9 @@
 from datetime import date
 from io import BytesIO
 from pathlib import Path
+from re import sub
 from sys import exit
-from typing import Iterator, List, Union, Tuple
+from typing import Iterator, List, Tuple, Union
 from uuid import uuid4
 
 import attr
@@ -48,28 +49,32 @@ class Metadata:
 class Story:
     url: furl = attr.ib(validator=attr.validators.instance_of(furl), converter=furl)
 
+    _metadata: Metadata = attr.ib(init=False, default=Metadata(url))
+    _datasource: Path = attr.ib(
+        init=False, default=(Path(__file__) / ".." / ".." / "data").resolve()
+    )
+    _filename: str = attr.ib(init=False, default=None)
+    _session: Session = attr.ib(init=False, factory=Session)
+    _styles: List[str] = attr.ib(init=False, default=["style.css"])
+    _main_page: BeautifulSoup = attr.ib(init=False)
+    _chapter_select: str = attr.ib(init=False)
+
     ILLEGAL_CHARACTERS = r'[<>:"/\|?]'
 
-    def __attrs_post_init__(self) -> None:
-        self.metadata = Metadata(self.url)
-        self.datasource = Path(__file__) / ".." / ".." / "data"
-        self.datasource = self.datasource.resolve()
-        self.filename = ""
-        self.session = Session()
-        self.css_styles = ["style.css"]
-
-        main_page_request = self.session.get(self.url)
+    def _initialise_main_page(self):
+        main_page_request = self._session.get(self.url)
         if main_page_request.status_code != codes.ok:
             exit(1)
-        self.main_page = BeautifulSoup(main_page_request.content, "html5lib")
+        self._main_page = BeautifulSoup(main_page_request.content, "html5lib")
 
     def run(self):
+        self._initialise_main_page()
         self.make_title_page()
         self.get_chapters()
         self.make_ebook()
 
     def prepare_style(self, filename: str) -> EpubItem:
-        cssfile = self.datasource / filename
+        cssfile = self._datasource / filename
         with cssfile.open() as fp:
             return EpubItem(
                 uid=cssfile.stem,
@@ -80,7 +85,7 @@ class Story:
 
     @property
     def styles(self):
-        return [self.prepare_style(file) for file in self.css_styles]
+        return [self.prepare_style(file) for file in self._styles]
 
     @staticmethod
     def get_raw_text(page: Response) -> str:
@@ -97,12 +102,12 @@ class Story:
         """
         Gets the number of chapters and the base template for chapter URLs
         """
-        list_of_chapters = self.main_page.select(self.chapter_select)
+        list_of_chapters = self._main_page.select(self._chapter_select)
 
         if list_of_chapters:
-            self.metadata.chapters = [self.chapter_parser(x) for x in list_of_chapters]
+            self._metadata.chapters = [self.chapter_parser(x) for x in list_of_chapters]
         else:
-            self.metadata.chapters = [self.metadata.title]
+            self._metadata.chapters = [self._metadata.title]
 
     def make_title_page(self) -> None:
         """
@@ -122,17 +127,19 @@ class Story:
         """
 
         chap_padding = (
-            strlen(self.metadata.chapters) if strlen(self.metadata.chapters) > 2 else 2
+            strlen(self._metadata.chapters)
+            if strlen(self._metadata.chapters) > 2
+            else 2
         )
 
-        for index, title in enumerate(self.metadata.chapters):
+        for index, title in enumerate(self._metadata.chapters):
             try:
                 url_segment, title = title
             except ValueError:
                 url_segment = index + 1
             url = self.make_new_chapter_url(self.url.copy(), url_segment)
             header = f"<h1>{title}</h1>"
-            raw_chapter = self.session.get(url)
+            raw_chapter = self._session.get(url)
             text = header + self.get_raw_text(raw_chapter)
             chapter_number = str(index + 1).zfill(chap_padding)
             echo(
@@ -148,22 +155,15 @@ class Story:
                 chapter.add_item(s)
             yield chapter
 
-    def write_bookfile(self, book) -> None:
-        """
-        Create the epub file.
-        """
-        echo("Writing into " + style(self.filename, bold=True, fg="green"))
-        write_epub(self.filename, book, {"tidyhtml": True, "epub3_pages": False})
-
     def make_ebook(self) -> None:
         """
         Combines everything to make an ePub book.
         """
         book = EpubBook()
         book.set_identifier(str(uuid4()))
-        book.set_title(self.metadata.title)
-        book.set_language(to_iso639_1(self.metadata.language))
-        book.add_author(self.metadata.author.name)
+        book.set_title(self._metadata.title)
+        book.set_language(to_iso639_1(self._metadata.language))
+        book.add_author(self._metadata.author.name)
 
         nav = EpubNav()
 
@@ -174,19 +174,19 @@ class Story:
 
         with BytesIO() as b:
             cover = Cover.create(
-                self.metadata.title, self.metadata.author.name, self.datasource
+                self._metadata.title, self._metadata.author.name, self._datasource
             )
             cover.run()
             cover.image.save(b, format="jpeg")
             book.set_cover("cover.jpg", b.getvalue())
 
-        template = Template(filename=str(self.datasource / "title.mako"))
+        template = Template(filename=str(self._datasource / "title.mako"))
 
         title_page = EpubHtml(
-            title=self.metadata.title,
+            title=self._metadata.title,
             file_name="title.xhtml",
             uid="title",
-            content=template.render(story=self.metadata),
+            content=template.render(story=self._metadata),
         )
 
         for s in self.styles:
@@ -202,4 +202,11 @@ class Story:
 
         book.spine.append(nav)
 
-        self.write_bookfile(book)
+        self._write(book)
+
+    def _write(self, book) -> None:
+        """
+        Create the epub file.
+        """
+        echo("Writing into " + style(self._filename, bold=True, fg="green"))
+        write_epub(self._filename, book, {"tidyhtml": True, "epub3_pages": False})

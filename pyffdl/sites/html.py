@@ -15,7 +15,6 @@ class HTMLStory(Story):
     chapters: List[str] = attr.ib()
     author: str = attr.ib()
     title: str = attr.ib()
-    url: furl = attr.ib()
 
     @staticmethod
     def get_raw_text(page: Response) -> str:
@@ -48,20 +47,20 @@ class HTMLStory(Story):
             _name = _file.split(".")[0] if "." in _file else _file
             return _url, _name.capitalize()
 
-        self.metadata.chapters = [_parse_url(x) for x in self.chapters]
+        self._metadata.chapters = [_parse_url(x) for x in self.chapters]
 
     def make_title_page(self) -> None:
         """
         Parses the main page for information about the story and author.
         """
-        self.metadata.title = self.title
-        self.metadata.author.name = self.author
-        self.metadata.author.url = None
-        self.metadata.language = "English"
+        self._metadata.title = self.title
+        self._metadata.author.name = self.author
+        self._metadata.author.url = None
+        self._metadata.language = "English"
         self.url = None
 
-        clean_title = sub(rf"{self.ILLEGAL_CHARACTERS}", "_", self.metadata.title)
-        self.filename = f"{self.metadata.author.name} - {clean_title}.epub"
+        clean_title = sub(rf"{self.ILLEGAL_CHARACTERS}", "_", self._metadata.title)
+        self._filename = f"{self._metadata.author.name} - {clean_title}.epub"
 
     def make_new_chapter_url(self, url: furl, value: str) -> furl:
         return furl(value)
