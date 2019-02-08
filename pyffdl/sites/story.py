@@ -1,9 +1,9 @@
-from datetime import date
+from datetime import date, datetime
 from io import BytesIO
 from pathlib import Path
 from re import sub
 from sys import exit
-from typing import Iterator, List, Tuple, Union
+from typing import Iterator, List, Tuple, Union, ClassVar
 from uuid import uuid4
 
 import attr
@@ -28,28 +28,35 @@ class Author:
 
 @attr.s
 class Metadata:
-    url: furl = attr.ib(factory=furl, converter=furl)
-    title: str = attr.ib(factory=str)
-    author: Author = attr.ib(factory=Author)
-    complete: bool = attr.ib(default=False)
-    published: date = attr.ib(default=pendulum.local(1970, 1, 1))
-    updated: date = attr.ib(default=pendulum.local(1970, 1, 1))
-    language: str = attr.ib(factory=str)
-    category: str = attr.ib(factory=str)
-    genres: List[str] = attr.ib(factory=list)
-    characters: List[str] = attr.ib(factory=list)
-    words: int = attr.ib(default=0)
-    summary: str = attr.ib(factory=str)
-    rating: str = attr.ib(factory=str)
-    tags: List[str] = attr.ib(factory=list)
-    chapters: List[str] = attr.ib(factory=list)
+    url: furl = attr.ib(validator=attr.validators.instance_of(furl))
+
+    _title: str = attr.ib(init=False, factory=str)
+    _author: Author = attr.ib(init=False, factory=Author)
+    _complete: bool = attr.ib(init=False, default=False)
+    _published: date = attr.ib(init=False, default=pendulum.local(1970, 1, 1))
+    _updated: date = attr.ib(init=False, default=pendulum.local(1970, 1, 1))
+    _downloaded: datetime = attr.ib(init=False, default=pendulum.now())
+    _language: str = attr.ib(init=False, factory=str)
+    _category: str = attr.ib(init=False, factory=str)
+    _genres: List[str] = attr.ib(init=False, factory=list)
+    _characters: List[str] = attr.ib(init=False, factory=list)
+    _words: int = attr.ib(init=False, default=0)
+    _summary: str = attr.ib(init=False, factory=str)
+    _rating: str = attr.ib(init=False, factory=str)
+    _tags: List[str] = attr.ib(init=False, factory=list)
+    _chapters: List[str] = attr.ib(init=False, factory=list)
+
+    @classmethod
+    def from_url(cls, url: furl):
+        return cls(url)
 
 
-@attr.s
+@attr.s(auto_attribs=True)
 class Story:
-    url: furl = attr.ib(validator=attr.validators.instance_of(furl), converter=furl)
+    url: furl
+    update: Union[Path, None] = None
 
-    _metadata: Metadata = attr.ib(init=False, default=Metadata(url))
+    _story_metadata: Metadata = attr.ib(init=False, default=Metadata(furl("")))
     _datasource: Path = attr.ib(
         init=False, default=(Path(__file__) / ".." / ".." / "data").resolve()
     )
@@ -59,16 +66,21 @@ class Story:
     _main_page: BeautifulSoup = attr.ib(init=False)
     _chapter_select: str = attr.ib(init=False)
 
-    ILLEGAL_CHARACTERS = r'[<>:"/\|?]'
+    ILLEGAL_CHARACTERS: ClassVar = r'[<>:"/\|?]'
 
-    def _initialise_main_page(self):
+    @classmethod
+    def from_url(cls, url: furl, update=None):
+        return cls(url=url)
+
+    def _initialise(self):
+        self._story_metadata = Metadata.from_url(self.url)
         main_page_request = self._session.get(self.url)
         if main_page_request.status_code != codes.ok:
             exit(1)
         self._main_page = BeautifulSoup(main_page_request.content, "html5lib")
 
     def run(self):
-        self._initialise_main_page()
+        self._initialise()
         self.make_title_page()
         self.get_chapters()
         self.make_ebook()
@@ -105,9 +117,11 @@ class Story:
         list_of_chapters = self._main_page.select(self._chapter_select)
 
         if list_of_chapters:
-            self._metadata.chapters = [self.chapter_parser(x) for x in list_of_chapters]
+            self._story_metadata._chapters = [
+                self.chapter_parser(x) for x in list_of_chapters
+            ]
         else:
-            self._metadata.chapters = [self._metadata.title]
+            self._story_metadata._chapters = [self._story_metadata._title]
 
     def make_title_page(self) -> None:
         """
@@ -127,12 +141,12 @@ class Story:
         """
 
         chap_padding = (
-            strlen(self._metadata.chapters)
-            if strlen(self._metadata.chapters) > 2
+            strlen(self._story_metadata._chapters)
+            if strlen(self._story_metadata._chapters) > 2
             else 2
         )
 
-        for index, title in enumerate(self._metadata.chapters):
+        for index, title in enumerate(self._story_metadata._chapters):
             try:
                 url_segment, title = title
             except ValueError:
@@ -161,32 +175,35 @@ class Story:
         """
         book = EpubBook()
         book.set_identifier(str(uuid4()))
-        book.set_title(self._metadata.title)
-        book.set_language(to_iso639_1(self._metadata.language))
-        book.add_author(self._metadata.author.name)
+        book.set_title(self._story_metadata._title)
+        book.set_language(to_iso639_1(self._story_metadata._language))
+        book.add_author(self._story_metadata._author.name)
 
         nav = EpubNav()
+        ncx = EpubNcx()
 
-        book.add_item(EpubNcx())
+        book.add_item(ncx)
         book.add_item(nav)
 
         book.toc = [x for x in self.step_through_chapters()]
 
         with BytesIO() as b:
             cover = Cover.create(
-                self._metadata.title, self._metadata.author.name, self._datasource
+                self._story_metadata._title,
+                self._story_metadata._author.name,
+                self._datasource,
             )
             cover.run()
-            cover.image.save(b, format="jpeg")
+            cover._image.save(b, format="jpeg")
             book.set_cover("cover.jpg", b.getvalue())
 
         template = Template(filename=str(self._datasource / "title.mako"))
 
         title_page = EpubHtml(
-            title=self._metadata.title,
+            title=self._story_metadata._title,
             file_name="title.xhtml",
             uid="title",
-            content=template.render(story=self._metadata),
+            content=template.render(story=self._story_metadata),
         )
 
         for s in self.styles:

@@ -11,7 +11,7 @@ from pyffdl.sites.story import Story
 from pyffdl.utilities.misc import clean_text
 
 
-@attr.s
+@attr.s(auto_attribs=True)
 class ArchiveOfOurOwnStory(Story):
     _chapter_select: str = attr.ib(init=False, default="select#selected_id option")
 
@@ -75,31 +75,33 @@ class ArchiveOfOurOwnStory(Story):
 
         _author = self._main_page.find("a", rel="author")
         _chapters = find_with_class("chapters", multi=False).split("/")
-        self._metadata.complete = False
+        self._story_metadata._complete = False
         if _chapters[-1].isdigit():
-            if int(_chapters[0]) == len(self._metadata.chapters):
-                self._metadata.complete = True
+            if int(_chapters[0]) == len(self._story_metadata._chapters):
+                self._story_metadata._complete = True
 
-        self._metadata.title = self._main_page.find(
+        self._story_metadata._title = self._main_page.find(
             "h2", class_="title heading"
         ).string.strip()
-        self._metadata.author.name = _author.string
-        self._metadata.author.url = self.url.copy().set(path=_author["href"])
-        self._metadata.rating = find_with_class("rating", multi=False)
-        self._metadata.updated = find_with_class("status", multi=False)
-        self._metadata.published = pendulum.parse(
+        self._story_metadata._author.name = _author.string
+        self._story_metadata._author.url = self.url.copy().set(path=_author["href"])
+        self._story_metadata._rating = find_with_class("rating", multi=False)
+        self._story_metadata._updated = find_with_class("status", multi=False)
+        self._story_metadata._published = pendulum.parse(
             find_with_class("published", multi=False)
         )
-        if self._metadata.updated:
-            self._metadata.updated = pendulum.parse(self._metadata.updated)
-        if self._metadata.updated == self._metadata.published:
-            self._metadata.updated = None
-        self._metadata.language = find_with_class("language", multi=False)
-        self._metadata.words = int(find_with_class("words", multi=False))
-        self._metadata.summary = None
-        self._metadata.genres = None
-        self._metadata.category = ", ".join(find_with_class("fandom"))
-        self._metadata.tags = find_with_class("freeform")
+        if self._story_metadata._updated:
+            self._story_metadata._updated = pendulum.parse(
+                self._story_metadata._updated
+            )
+        if self._story_metadata._updated == self._story_metadata._published:
+            self._story_metadata._updated = None
+        self._story_metadata._language = find_with_class("language", multi=False)
+        self._story_metadata._words = int(find_with_class("words", multi=False))
+        self._story_metadata._summary = None
+        self._story_metadata._genres = None
+        self._story_metadata._category = ", ".join(find_with_class("fandom"))
+        self._story_metadata._tags = find_with_class("freeform")
 
         characters = find_with_class("character")
         try:
@@ -108,15 +110,17 @@ class ArchiveOfOurOwnStory(Story):
             couples = []
         _not_singles = {character for couple in couples for character in couple}
 
-        self._metadata.characters = {
+        self._story_metadata._characters = {
             "couples": couples,
             "singles": [
                 character for character in characters if character not in _not_singles
             ],
         }
 
-        clean_title = sub(rf"{self.ILLEGAL_CHARACTERS}", "_", self._metadata.title)
-        self._filename = f"{self._metadata.author.name} - {clean_title}.epub"
+        clean_title = sub(
+            rf"{self.ILLEGAL_CHARACTERS}", "_", self._story_metadata._title
+        )
+        self._filename = f"{self._story_metadata._author.name} - {clean_title}.epub"
 
     def make_new_chapter_url(self, url: furl, value: int) -> furl:
         url.path.segments[-1] = value

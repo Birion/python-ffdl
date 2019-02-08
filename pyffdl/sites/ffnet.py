@@ -14,7 +14,7 @@ from pyffdl.utilities import in_dictionary, turn_into_dictionary
 from pyffdl.utilities.misc import clean_text
 
 
-@attr.s
+@attr.s(auto_attribs=True)
 class FanFictionNetStory(Story):
     _chapter_select: str = attr.ib(init=False, default="select#chap_select option")
 
@@ -80,31 +80,37 @@ class FanFictionNetStory(Story):
         updated = in_dictionary(_data, "Updated")
         rating = in_dictionary(_data, "Rated")
 
-        self._metadata.title = _header.find("b").string
-        self._metadata.author.name = _author.string
-        self._metadata.author.url = self.url.copy().set(path=_author["href"])
-        self._metadata.summary = _header.find("div", class_="xcontrast_txt").string
+        self._story_metadata._title = _header.find("b").string
+        self._story_metadata._author.name = _author.string
+        self._story_metadata._author.url = self.url.copy().set(path=_author["href"])
+        self._story_metadata._summary = _header.find(
+            "div", class_="xcontrast_txt"
+        ).string
         if rating:
-            self._metadata.rating = BeautifulSoup(rating, "html5lib").find("a").string
-        self._metadata.category = (
+            self._story_metadata._rating = (
+                BeautifulSoup(rating, "html5lib").find("a").string
+            )
+        self._story_metadata._category = (
             self._main_page.find(id="pre_story_links").find("a").string
         )
-        self._metadata.genres = in_dictionary(_data, "Genres")
-        self._metadata.characters = in_dictionary(_data, "Characters")
-        self._metadata.words = in_dictionary(_data, "Words")
+        self._story_metadata._genres = in_dictionary(_data, "Genres")
+        self._story_metadata._characters = in_dictionary(_data, "Characters")
+        self._story_metadata._words = in_dictionary(_data, "Words")
         if published:
             published = time_pattern.search(published).group(1)
-            self._metadata.published = check_date(int(published))
+            self._story_metadata._published = check_date(int(published))
         if updated:
             updated = time_pattern.search(updated).group(1)
-            self._metadata.updated = check_date(int(updated))
+            self._story_metadata._updated = check_date(int(updated))
         else:
-            self._metadata.updated = None
-        self._metadata.language = in_dictionary(_data, "Language")
-        self._metadata.complete = in_dictionary(_data, "Status")
+            self._story_metadata._updated = None
+        self._story_metadata._language = in_dictionary(_data, "Language")
+        self._story_metadata._complete = in_dictionary(_data, "Status")
 
-        clean_title = sub(rf"{self.ILLEGAL_CHARACTERS}", "_", self._metadata.title)
-        self._filename = f"{self._metadata.author.name} - {clean_title}.epub"
+        clean_title = sub(
+            rf"{self.ILLEGAL_CHARACTERS}", "_", self._story_metadata._title
+        )
+        self._filename = f"{self._story_metadata._author.name} - {clean_title}.epub"
 
     def make_new_chapter_url(self, url: furl, value: int) -> furl:
         url.path.segments[-2] = value
