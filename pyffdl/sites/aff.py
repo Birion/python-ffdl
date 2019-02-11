@@ -15,7 +15,7 @@ from pyffdl.sites.story import Story
 
 @attr.s(auto_attribs=True)
 class AdultFanFictionStory(Story):
-    _chapter_select: str = attr.ib(
+    chapter_select: str = attr.ib(
         init=False, default="table:nth-of-type(3) .dropdown-content a"
     )
 
@@ -67,7 +67,7 @@ class AdultFanFictionStory(Story):
                 else:
                     return data.find_parent("tbody")("td")
 
-        _header = self._main_page("table")[2].table("td")
+        _header = self.main_page("table")[2].table("td")
         _author = _header[1].a
         _title = _header[0].string
         _category = _header[1]("a")[-1]["href"]
@@ -77,29 +77,25 @@ class AdultFanFictionStory(Story):
         _updated = _headings[0].split(" : ")[-1].strip()
         _tags = _data[3].get_text(strip=True).split(":")[-1].split()
 
-        self._story_metadata._title = _title
-        self._story_metadata._author.name = _author.string
-        self._story_metadata._author.url = _author["href"]
-        self._story_metadata._summary = _data[2].get_text(strip=True)
-        self._story_metadata._rating = _headings[1].strip().split(" : ")[-1]
-        self._story_metadata._category = " ".join(
+        self.metadata.title = _title
+        self.metadata.author.name = _author.string
+        self.metadata.author.url = _author["href"]
+        self.metadata.summary = _data[2].get_text(strip=True)
+        self.metadata.rating = _headings[1].strip().split(" : ")[-1]
+        self.metadata.category = " ".join(
             [y.strip() for y in [x.string for x in _header[1].br.next_siblings][1:-2]]
         )
         # self.genres = in_dictionary(_data, "Genres")
         # self.characters = in_dictionary(_data, "Characters")
         # self.words = in_dictionary(_data, "Words")
-        self._story_metadata._language = "English"
-        self._story_metadata._published = check_date(_published)
-        self._story_metadata._updated = check_date(_updated)
-        self._story_metadata._complete = "COMPLETE" in _tags or "Oneshot" in _tags
-        self._story_metadata._tags = _tags
+        self.metadata.language = "English"
+        self.metadata.published = check_date(_published)
+        self.metadata.updated = check_date(_updated)
+        self.metadata.complete = "COMPLETE" in _tags or "Oneshot" in _tags
+        self.metadata.tags = _tags
 
-        clean_title = sub(
-            rf"{self.ILLEGAL_CHARACTERS}", "_", self._story_metadata._title
-        )
-        self._filename = (
-            f"[ADULT] {self._story_metadata._author.name} - {clean_title}.epub"
-        )
+        clean_title = sub(rf"{self.ILLEGAL_CHARACTERS}", "_", self.metadata.title)
+        self.filename = f"[ADULT] {self.metadata.author.name} - {clean_title}.epub"
 
     def make_new_chapter_url(self, url: furl, value: int) -> furl:
         url.args["chapter"] = value
