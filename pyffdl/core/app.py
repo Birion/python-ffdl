@@ -1,4 +1,4 @@
-import os
+import shutil
 from typing import List, Tuple, Union
 
 import click
@@ -9,8 +9,8 @@ from pyffdl.sites import (
     AdultFanFictionStory,
     ArchiveOfOurOwnStory,
     FanFictionNetStory,
-    TwistingTheHellmouthStory,
     HTMLStory,
+    TwistingTheHellmouthStory,
 )
 from pyffdl.utilities import get_url_from_file, list2text
 
@@ -112,5 +112,5 @@ def cli_simple(
 def cli_update(force: bool, backup: bool, filename: click.Path) -> None:
     update = filename if force else None
     if backup:
-        os.rename(f"{filename}", f"{filename}.bck")
+        shutil.copy(f"{filename}", f"{filename}.bck")
     download([get_url_from_file(filename)], update)
