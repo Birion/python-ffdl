@@ -25,25 +25,25 @@ AVAILABLE_SITES = {
 
 def download(urls: List[str], update: Union[str, None] = None) -> None:
     for address in urls:
-        # try:
-        host = ".".join(furl(address).host.split(".")[-2:])
-        if host in AVAILABLE_SITES.keys():
-            _story = AVAILABLE_SITES[host]
-            story = _story.from_url(furl(address), update)
-            if not update:
-                story.run()
+        try:
+            host = ".".join(furl(address).host.split(".")[-2:])
+            if host in AVAILABLE_SITES.keys():
+                _story = AVAILABLE_SITES[host]
+                story = _story.from_url(furl(address), update)
+                if not update:
+                    story.run()
+                else:
+                    story.update_run()
             else:
-                story.update_run()
-        else:
+                click.echo(
+                    f"{__file__} is currently only able to download from {list2text(AVAILABLE_SITES.keys())}."
+                )
+        except AttributeError as e:
+            print(e)
+            click.echo("There were problems with parsing the URL.")
             click.echo(
-                f"{__file__} is currently only able to download from {list2text(AVAILABLE_SITES.keys())}."
+                "This may have been caused by trying to update a file not created by pyffdl."
             )
-        # except AttributeError as e:
-        #     print(e)
-        #     click.echo("There were problems with parsing the URL.")
-        #     click.echo(
-        #         "This may have been caused by trying to update a file not created by pyffdl."
-        #     )
 
 
 @click.group()
@@ -112,5 +112,5 @@ def cli_simple(
 def cli_update(force: bool, backup: bool, filename: click.Path) -> None:
     update = filename if force else None
     if backup:
-        os.rename(f"{filename.resolve()}", f"{filename.resolve()}.bck")
+        os.rename(f"{filename}", f"{filename}.bck")
     download([get_url_from_file(filename)], update)
