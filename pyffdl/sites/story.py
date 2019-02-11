@@ -53,7 +53,7 @@ class Metadata:
 
 @attr.s(auto_attribs=True)
 class Story:
-    url: furl
+    url: furl = attr.ib(validator=attr.validators.instance_of(furl), converter=furl)
     update: Union[Path, None] = None
 
     metadata: Metadata = attr.ib(init=False, default=Metadata(furl("")))
