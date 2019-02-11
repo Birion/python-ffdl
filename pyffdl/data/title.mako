@@ -1,34 +1,34 @@
 ## coding=utf-8
 <%
-    number_of_chapters = len(story._chapters) if story._complete else "??"
-    chapters = "{}/{}".format(len(story._chapters), number_of_chapters)
-    genres = "/".join(story._genres) if story._genres else None
-    tags = ", ".join(story._tags) if story._tags else None
+    number_of_chapters = len(story.chapters) if story.complete else "??"
+    chapters = "{}/{}".format(len(story.chapters), number_of_chapters)
+    genres = "/".join(story.genres) if story.genres else None
+    tags = ", ".join(story.tags) if story.tags else None
     characters = None
-    if story._characters:
+    if story.characters:
         characters = ""
-        if story._characters["couples"]:
-            couples = ["[" + ", ".join(x) + "]" for x in story._characters["couples"]]
+        if story.characters["couples"]:
+            couples = ["[" + ", ".join(x) + "]" for x in story.characters["couples"]]
             characters += " ".join(couples)
-            if story._characters["singles"]:
+            if story.characters["singles"]:
                 characters += " "
-        if story._characters["singles"]:
-            characters += ", ".join(story._characters["singles"])
+        if story.characters["singles"]:
+            characters += ", ".join(story.characters["singles"])
 
     metadata = [
-        ("Story", story._title, "title"),
-        ("Author", story._author.name, "author"),
+        ("Story", story.title, "title"),
+        ("Author", story.author.name, "author"),
         ("URL", story.url, "story-url", True),
-        ("Author URL", story._author.url, "author-url", True),
-        ("Language", story._language, "lang"),
-        ("Rating", story._rating, "rating"),
-        ("Category", story._category, "category"),
+        ("Author URL", story.author.url, "author-url", True),
+        ("Language", story.language, "lang"),
+        ("Rating", story.rating, "rating"),
+        ("Category", story.category, "category"),
         ("Genre", genres, "genres"),
         ("Characters", characters, "characters"),
-        ("Published", story._published.to_iso8601_string() if story._published else None, "published"),
-        ("Updated", story._updated.to_iso8601_string() if story._updated else None, "updated"),
-        ("Downloaded", story._downloaded.to_iso8601_string(), "downloaded"),
-        ("Words", story._words, "words"),
+        ("Published", story.published.to_iso8601_string() if story.published else None, "published"),
+        ("Updated", story.updated.to_iso8601_string() if story.updated else None, "updated"),
+        ("Downloaded", story.downloaded.to_iso8601_string(), "downloaded"),
+        ("Words", story.words, "words"),
         ("Tags", tags, "tags"),
         ("Chapters", chapters, "chapters")
     ]
@@ -46,7 +46,7 @@
     % endif
 </%def>
 <div class="header">
-    <h1>${story._title}</h1> by <h2>${story._author.name}</h2>
+    <h1>${story.title}</h1> by <h2>${story.author.name}</h2>
 </div>
 <div class="titlepage">
     % for data in metadata:
@@ -54,10 +54,10 @@
             ${print_metadata(*data)}
         % endif
     % endfor
-    % if story._summary:
+    % if story.summary:
         <div>
             <strong>Summary:</strong>
-            <p>${story._summary}</p>
+            <p>${story.summary}</p>
         </div>
     % endif
 </div>
