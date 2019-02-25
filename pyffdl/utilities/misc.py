@@ -1,10 +1,10 @@
 from re import sub
-from typing import List, Union, KeysView
+from typing import KeysView, List, Set, Tuple, Union
 
 from bs4 import BeautifulSoup
-from ebooklib import epub
-from iso639 import data
 from click import Path
+from ebooklib import epub
+import iso639
 
 GENRES = [
     "Adventure",
@@ -29,7 +29,6 @@ GENRES = [
     "Tragedy",
     "Western",
 ]
-LANGUAGES = [x["name"] for x in data]
 
 
 def list2text(input_list: Union[KeysView[str], List[str]]) -> str:
@@ -46,6 +45,8 @@ def turn_into_dictionary(input_data: List[str]) -> dict:
     """
     Transform a list with fic data into a dictionary.
     """
+    if not isinstance(input_data, list):
+        raise TypeError(f"'{type(input_data)}' cannot be used here")
     dic = {}
     key, val = None, None
     for index, i in enumerate(input_data):
@@ -54,9 +55,10 @@ def turn_into_dictionary(input_data: List[str]) -> dict:
             key = _[0]
             val = _[1] if not _[1].isdigit() else int(_[1])
         else:
-            if i in LANGUAGES:
+            lang = iso639.find(i)
+            if lang:
                 key = "Language"
-                val = i
+                val = lang["name"]
             else:
                 key = "Characters"
                 val = [x.strip() for x in i.split(",")]
@@ -90,5 +92,7 @@ def strlen(data: list) -> int:
     return len(str(len(data)))
 
 
-def clean_text(text: list) -> str:
+def clean_text(text: Union[List, Tuple, Set]) -> str:
+    if not (isinstance(text, list) or isinstance(text, tuple) or isinstance(text, set)):
+        raise TypeError
     return "".join(sub(r"\s+", " ", str(x).strip()) for x in text)
