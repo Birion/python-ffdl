@@ -85,9 +85,6 @@ class AdultFanFictionStory(Story):
         self.metadata.category = " ".join(
             [y.strip() for y in [x.string for x in _header[1].br.next_siblings][1:-2]]
         )
-        # self.genres = in_dictionary(_data, "Genres")
-        # self.characters = in_dictionary(_data, "Characters")
-        # self.words = in_dictionary(_data, "Words")
         self.metadata.language = "English"
         self.metadata.published = check_date(_published)
         self.metadata.updated = check_date(_updated)
