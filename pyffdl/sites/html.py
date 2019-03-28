@@ -16,7 +16,6 @@ class HTMLStory(Story):
     chapters: List[str]
     author: str
     title: str
-    update: Union[Path, None] = attr.ib(default=None, converter=Path)
 
     @staticmethod
     def get_raw_text(page: Response) -> str:

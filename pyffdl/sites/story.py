@@ -1,3 +1,4 @@
+import logging
 from datetime import date, datetime
 from io import BytesIO
 from pathlib import Path
@@ -54,7 +55,7 @@ class Metadata:
 @attr.s(auto_attribs=True)
 class Story:
     url: furl = attr.ib(validator=attr.validators.instance_of(furl), converter=furl)
-    update: Union[Path, None] = None
+    verbose: bool = attr.ib()
 
     metadata: Metadata = attr.ib(init=False, default=Metadata(furl("")))
     datasource: Path = attr.ib(
@@ -69,8 +70,8 @@ class Story:
     ILLEGAL_CHARACTERS: ClassVar = r'[<>:"/\|?]'
 
     @classmethod
-    def from_url(cls, url: furl, update=None):
-        return cls(url, update)
+    def from_url(cls, url: furl, verbose: bool):
+        return cls(url, verbose)
 
     def _initialise(self):
         self.metadata = Metadata.from_url(self.url)
@@ -80,6 +81,7 @@ class Story:
         self.main_page = BeautifulSoup(main_page_request.content, "html5lib")
 
     def run(self):
+        echo(f"Downloading {self.url}")
         self._initialise()
         self.make_title_page()
         self.get_chapters()
@@ -112,6 +114,17 @@ class Story:
     @staticmethod
     def chapter_parser(value: Tag) -> Union[str, Tuple[int, str]]:
         return sub(r"\d+\.\s+", "", value.text)
+
+    def log(self, text: str, force: bool = False):
+        if self.verbose:
+            echo(text)
+        else:
+            with open("pyffdl.log", "a") as fp:
+                echo(error, file=fp)
+        if force:
+            echo(text)
+            with open("pyffdl.log", "a") as fp:
+                echo(error, file=fp)
 
     def get_chapters(self) -> None:
         """
@@ -155,7 +168,7 @@ class Story:
             raw_chapter = self.session.get(url)
             text = header + self.get_raw_text(raw_chapter)
             chapter_number = str(index + 1).zfill(chap_padding)
-            echo(
+            self.log(
                 f"Downloading chapter {style(chapter_number, bold=True, fg='blue')} - {style(title, fg='yellow')}"
             )
             chapter = EpubHtml(
