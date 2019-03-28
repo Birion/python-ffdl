@@ -65,11 +65,7 @@ class FanFictionNetStory(Story):
         )
 
         if "Characters" in _data.keys():
-            _data["Characters"] = ", ".join(_data["Characters"])
-            echo(_data)
-            _data["Characters"] = parse_characters(_data["Characters"])
-        else:
-            echo(_data)
+            _data["Characters"] = parse_characters(", ".join(_data["Characters"]))
 
         time_pattern = compile(r'xutime="(\d+)"')
 

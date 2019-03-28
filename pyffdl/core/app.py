@@ -108,9 +108,10 @@ def cli_simple(
 @click.option(
     "-b", "--backup", is_flag=True, default=False, help="Backup the original file."
 )
-@click.argument("filename", type=click.Path(dir_okay=False, exists=True))
-def cli_update(force: bool, backup: bool, filename: click.Path) -> None:
-    update = filename if force else None
-    if backup:
-        shutil.copy(f"{filename}", f"{filename}.bck")
-    download([get_url_from_file(filename)], update)
+@click.argument("filenames", type=click.Path(dir_okay=False, exists=True), nargs=-1)
+def cli_update(force: bool, backup: bool, filenames: List[click.Path]) -> None:
+    for filename in filenames:
+        update = filename if force else None
+        if backup:
+            shutil.copy(f"{filename}", f"{filename}.bck")
+        download([get_url_from_file(filename)], update)
