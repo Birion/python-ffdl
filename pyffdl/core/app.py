@@ -23,27 +23,27 @@ AVAILABLE_SITES = {
 }
 
 
-def download(urls: List[str], update: Union[str, None] = None) -> None:
+def download(urls: List[str], update: bool = False, verbose: bool = False) -> None:
     for address in urls:
+        if not address:
+            continue
         try:
             host = ".".join(furl(address).host.split(".")[-2:])
-            if host in AVAILABLE_SITES.keys():
-                _story = AVAILABLE_SITES[host]
-                story = _story.from_url(furl(address), update)
+            try:
+                story = AVAILABLE_SITES[host].from_url(furl(address), verbose)
                 if not update:
                     story.run()
                 else:
                     story.update_run()
-            else:
+            except KeyError:
                 click.echo(
                     f"{__file__} is currently only able to download from {list2text(AVAILABLE_SITES.keys())}."
                 )
-        except AttributeError as e:
-            print(e)
-            click.echo("There were problems with parsing the URL.")
-            click.echo(
-                "This may have been caused by trying to update a file not created by pyffdl."
-            )
+        except AttributeError:
+            error = "There were problems with parsing the URL."
+            with open("pyffdl.log", "a") as fp:
+                click.echo(error, file=fp)
+            click.echo(error, err=True)
 
 
 @click.group()
@@ -60,12 +60,17 @@ def cli() -> None:
     type=click.File(),
     help="Load a list of URLs from a plaintext file.",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+)
 @click.argument("url_list", nargs=-1)
-def cli_download(from_file: click.File, url_list: Tuple[str, ...]) -> None:
+def cli_download(from_file: click.File, url_list: Tuple[str, ...], verbose: bool = False) -> None:
     urls = [x for x in url_list]
     if from_file:
         urls += [x.strip("\n") for x in from_file.readlines()]
-    download(urls)
+    download(urls, False, verbose)
 
 
 @cli.command("simple", help="Download a single story, using a list of chapter URLs.")
@@ -78,9 +83,14 @@ def cli_download(from_file: click.File, url_list: Tuple[str, ...]) -> None:
 )
 @click.option("-a", "--author", help="Name of the author", type=str, required=True)
 @click.option("-t", "--title", help="Title of the story", type=str, required=True)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+)
 @click.argument("url_list", nargs=-1)
 def cli_simple(
-    from_file: click.File, author: str, title: str, url_list: Tuple[str, ...]
+    from_file: click.File, author: str, title: str, url_list: Tuple[str, ...], verbose: bool = False
 ):
     urls = [x for x in url_list]
     if from_file:
@@ -93,6 +103,7 @@ def cli_simple(
         author=author,
         title=title,
         url=furl("http://httpbin.org/status/200"),
+        verbose=verbose
     )
     story.run()
 
@@ -108,10 +119,15 @@ def cli_simple(
 @click.option(
     "-b", "--backup", is_flag=True, default=False, help="Backup the original file."
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+)
 @click.argument("filenames", type=click.Path(dir_okay=False, exists=True), nargs=-1)
-def cli_update(force: bool, backup: bool, filenames: List[click.Path]) -> None:
+def cli_update(force: bool, backup: bool, filenames: List[click.Path], verbose: bool = False) -> None:
     for filename in filenames:
-        update = filename if force else None
         if backup:
             shutil.copy(f"{filename}", f"{filename}.bck")
-        download([get_url_from_file(filename)], update)
+    stories = [get_url_from_file(x) for x in filenames]
+    download(stories, force, verbose)

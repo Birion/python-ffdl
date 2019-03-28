@@ -1,8 +1,9 @@
 from re import sub
 from typing import KeysView, List, Set, Tuple, Union
+import logging
 
 from bs4 import BeautifulSoup
-from click import Path
+from click import Path, echo
 from ebooklib import epub
 import iso639
 
@@ -76,16 +77,23 @@ def in_dictionary(dic: dict, key: Union[str, int, tuple]) -> str:
     return dic[key] if key in dic.keys() else None
 
 
-def get_url_from_file(file: Union[str, Path]) -> str:
+def get_url_from_file(file: Union[str, Path]) -> Union[str, None]:
     book = epub.read_epub(file)
     title_page = book.get_item_with_id("title")
     if not title_page:  # if we're checking old-format ebook
         title_page = book.get_item_with_id("nav")
-    parsed_text = BeautifulSoup(title_page.content, "html5lib")
-    url = parsed_text.find(id="story-url")
-    if not url:
-        url = parsed_text
-    return url("a")[0]["href"]
+    try:
+        parsed_text = BeautifulSoup(title_page.content, "html5lib")
+        url = parsed_text.find(id="story-url")
+        if not url:
+            url = parsed_text
+        return url("a")[0]["href"]
+    except AttributeError:
+        error = f"File {file} doesn't contain requested information."
+        with open("pyffdl.log", "a") as fp:
+            echo(error, file=fp)
+        echo(error, err=True)
+        return None
 
 
 def strlen(data: list) -> int:
