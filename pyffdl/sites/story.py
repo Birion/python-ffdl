@@ -120,11 +120,11 @@ class Story:
             echo(text)
         else:
             with open("pyffdl.log", "a") as fp:
-                echo(error, file=fp)
+                echo(text, file=fp)
         if force:
             echo(text)
             with open("pyffdl.log", "a") as fp:
-                echo(error, file=fp)
+                echo(text, file=fp)
 
     def get_chapters(self) -> None:
         """
