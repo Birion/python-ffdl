@@ -1,50 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#  The MIT License (MIT)
-#
-#  Copyright (c) 2016-2019 Birion
-#
-#  Permission is hereby granted, free of charge, to any person obtaining a copy
-#  of this software and associated documentation files (the "Software"), to deal
-#  in the Software without restriction, including without limitation the rights
-#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#  copies of the Software, and to permit persons to whom the Software is
-#  furnished to do so, subject to the following conditions:
-#
-#  The above copyright notice and this permission notice shall be included in all
-#  copies or substantial portions of the Software.
-#
-#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#  SOFTWARE.
-
-#  The MIT License (MIT)
-#
-#  Copyright (c) 2016-2019 Birion
-#
-#  Permission is hereby granted, free of charge, to any person obtaining a copy
-#  of this software and associated documentation files (the "Software"), to deal
-#  in the Software without restriction, including without limitation the rights
-#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#  copies of the Software, and to permit persons to whom the Software is
-#  furnished to do so, subject to the following conditions:
-#
-#  The above copyright notice and this permission notice shall be included in all
-#  copies or substantial portions of the Software.
-#
-#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#  SOFTWARE.
-
 # Note: To use the 'upload' functionality of this file, you must:
 #   $ pip install twine
 
@@ -61,13 +17,13 @@ DESCRIPTION = "Fanfiction download script"
 URL = "https://github.com/Birion/python-ffdl"
 EMAIL = "ondrej.vagner@gmail.com"
 AUTHOR = "Birion"
-REQUIRES_PYTHON = ">=3.6"
+REQUIRES_PYTHON = ">=3.7"
 VERSION = None
 
 # What packages are required for this module to be executed?
 REQUIRED = [
     "attrs>=18",
-    "beautifulsoup4",
+    "beautifulsoup4>=4",
     "click>=7",
     "ebooklib>=0.17",
     "furl>=2",
@@ -75,7 +31,7 @@ REQUIRED = [
     "iso639>=0.1",
     "mako>=1",
     "pendulum>=2",
-    "pillow>=5.4",
+    "pillow>=5",
     "requests>=2",
 ]
 DEPENDENCY = []

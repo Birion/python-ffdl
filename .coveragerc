@@ -1,0 +1,4 @@
+[run]
+omit =
+    setup.py
+    ffdl.py
