@@ -17,9 +17,9 @@ class ArchiveOfOurOwnStory(Story):
 
     def __attrs_post_init__(self):
         if "chapters" not in self.url.path.segments:
-            self.url.path.segments += ["chapters", "123456"]
+            self.url.path.segments += ["chapters", "1"]
         if self.url.path.segments[-1] == "chapters":
-            self.url.path.segments += ["123456"]
+            self.url.path.segments += ["1"]
 
     @staticmethod
     def get_raw_text(page: Response) -> str:
@@ -114,9 +114,6 @@ class ArchiveOfOurOwnStory(Story):
                 character for character in characters if character not in _not_singles
             ],
         }
-
-        clean_title = sub(rf"{self.ILLEGAL_CHARACTERS}", "_", self.metadata.title)
-        self.filename = f"{self.metadata.author.name} - {clean_title}.epub"
 
     def make_new_chapter_url(self, url: furl, value: int) -> furl:
         url.path.segments[-1] = value

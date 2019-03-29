@@ -31,7 +31,4 @@ Fanfiction downloader
 
 * better covers
     * by genres?
-* actually `--update` the file when updating
-    * keep the existing chapters/covers
-    * update the titlepage
 * actually useful tests

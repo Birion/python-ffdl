@@ -18,6 +18,7 @@ class AdultFanFictionStory(Story):
     chapter_select: str = attr.ib(
         init=False, default="table:nth-of-type(3) .dropdown-content a"
     )
+    adult: bool = attr.ib(init=False, default=True)
 
     @staticmethod
     def get_raw_text(page: Response) -> str:
@@ -90,9 +91,6 @@ class AdultFanFictionStory(Story):
         self.metadata.updated = check_date(_updated)
         self.metadata.complete = "COMPLETE" in _tags or "Oneshot" in _tags
         self.metadata.tags = _tags
-
-        clean_title = sub(rf"{self.ILLEGAL_CHARACTERS}", "_", self.metadata.title)
-        self.filename = f"[ADULT] {self.metadata.author.name} - {clean_title}.epub"
 
     def make_new_chapter_url(self, url: furl, value: int) -> furl:
         url.args["chapter"] = value
