@@ -1,4 +1,5 @@
 import pytest
+from pathlib import Path
 from pyffdl.utilities.misc import *
 
 
@@ -18,6 +19,8 @@ def test_turn_into_dictionary():
     assert turn_into_dictionary(["English"]) == {"Language": "English"}
     assert turn_into_dictionary(["Updated: 12.2.2019"]) == {"Updated": "12.2.2019"}
     assert turn_into_dictionary(["Pages: 173"]) == {"Pages": 173}
+    assert turn_into_dictionary(["Harry, [Hermione, Ron]"]) == {'Characters': ['Harry', '[Hermione', 'Ron]']}
+    assert turn_into_dictionary(["Romance"]) == {'Genres': ['Romance']}
 
 
 def test_in_dictionary():
@@ -28,8 +31,16 @@ def test_in_dictionary():
     assert in_dictionary(dic, 1) == "1"
 
 
-def test_get_url_from_file():
-    pass
+@pytest.mark.parametrize(
+    "filename,url",
+    [
+        ("good_test.epub", "http://www.fanfiction.net/s/7954090/1/"),
+        ("bad_test.epub", None),
+    ],
+)
+def test_get_url_from_file(filename, url):
+    path = Path("./tests/data/")
+    assert get_url_from_file(path / filename) == url
 
 
 def test_strlen():

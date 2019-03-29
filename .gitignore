@@ -95,7 +95,7 @@ ENV/
 # Rope project settings
 .ropeproject
 
-*.epub
+/*.epub
 .idea/
 /bin/ffdl.py
 .pytest_cache/
