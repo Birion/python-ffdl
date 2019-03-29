@@ -2,49 +2,44 @@ body {
   margin: 0.5em;
   padding: 1em;
   font-size: 1em;
-  font-family: "Source Sans Pro", Helvetica, Arial, sans-serif;
-}
+  font-family: "Source Sans Pro", Helvetica, Arial, sans-serif; }
 
 p {
-  text-align: justify;
-  text-indent: 1.25em;
   margin: auto;
-}
+  text-align: justify;
+  text-indent: 1.25em; }
 
 div p:nth-of-type(1) {
-  text-indent: 0;
-}
+  text-indent: 0; }
 
-h1, h2, h3 {
-  font-variant: small-caps;
+h1,
+h2,
+h3 {
   text-align: center;
-}
-h1 + p, h2 + p, h3 + p {
-  text-indent: 0;
-}
+  font-variant: small-caps; }
+  h1 + p,
+  h2 + p,
+  h3 + p {
+    text-indent: 0; }
 
-.header, .center {
-  text-align: center;
-}
-.header + p, .center + p {
-  text-indent: 0;
-}
+.header,
+.center {
+  text-align: center; }
+  .header + p,
+  .center + p {
+    text-indent: 0; }
 
 p.center {
-  text-indent: 0;
-}
+  text-indent: 0; }
 
 .author {
   margin: 1em auto;
-  font-size: 150%;
-}
+  font-size: 150%; }
 
 .source {
-  margin-bottom: 1em;
-}
+  margin-bottom: 1em; }
 
 .pagebreak {
-  page-break-before: always;
-}
+  page-break-before: always; }
 
 /*# sourceMappingURL=style.css.map */

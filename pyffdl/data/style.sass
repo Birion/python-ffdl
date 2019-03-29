@@ -9,30 +9,35 @@ body
   padding: 1em
   font:
     size: 1em
-    family: "Source Sans Pro", Helvetica, Arial, sans-serif
+    family: 'Source Sans Pro', Helvetica, Arial, sans-serif
 
 p
+  margin: auto
   text-align: justify
   text-indent: 1.25em
-  margin: auto
 
 div
   p:nth-of-type(1)
     +no-indent
 
-h1, h2, h3
+h1,
+h2,
+h3
+  +center
   font-variant: small-caps
+
+  & + p
+    +no-indent
+
+.header,
+.center
   +center
   & + p
     +no-indent
 
-.header, .center
-  +center
-  & + p
+p
+  &.center
     +no-indent
-
-p.center
-  +no-indent
 
 .author
   margin: 1em auto
