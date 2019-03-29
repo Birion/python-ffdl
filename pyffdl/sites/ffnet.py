@@ -96,9 +96,6 @@ class FanFictionNetStory(Story):
         self.metadata.language = in_dictionary(_data, "Language")
         self.metadata.complete = in_dictionary(_data, "Status")
 
-        clean_title = sub(rf"{self.ILLEGAL_CHARACTERS}", "_", self.metadata.title)
-        self.filename = f"{self.metadata.author.name} - {clean_title}.epub"
-
     def make_new_chapter_url(self, url: furl, value: int) -> furl:
         url.path.segments[-2] = value
         return url

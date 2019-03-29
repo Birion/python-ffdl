@@ -18,6 +18,7 @@ pillow = ">=5"
 requests = ">=2"
 EbookLib = ">=0.17"
 Mako = ">=1"
+pytest = "*"
 
 [requires]
 python_version = "3.7"

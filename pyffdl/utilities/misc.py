@@ -3,9 +3,9 @@ from typing import KeysView, List, Set, Tuple, Union
 import logging
 
 from bs4 import BeautifulSoup
-from click import Path, echo
 from ebooklib import epub
 import iso639
+import click
 
 GENRES = [
     "Adventure",
@@ -77,7 +77,7 @@ def in_dictionary(dic: dict, key: Union[str, int, tuple]) -> str:
     return dic[key] if key in dic.keys() else None
 
 
-def get_url_from_file(file: Union[str, Path]) -> Union[str, None]:
+def get_url_from_file(file: Union[str, click.Path]) -> Union[str, None]:
     book = epub.read_epub(file)
     title_page = book.get_item_with_id("title")
     if not title_page:  # if we're checking old-format ebook
@@ -91,8 +91,8 @@ def get_url_from_file(file: Union[str, Path]) -> Union[str, None]:
     except AttributeError:
         error = f"File {file} doesn't contain requested information."
         with open("pyffdl.log", "a") as fp:
-            echo(error, file=fp)
-        echo(error, err=True)
+            click.echo(error, file=fp)
+        click.echo(error, err=True)
         return None
 
 

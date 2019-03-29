@@ -103,9 +103,6 @@ class TwistingTheHellmouthStory(Story):
 
         self.metadata.characters = {"couples": None, "singles": None}
 
-        clean_title = sub(rf"{self.ILLEGAL_CHARACTERS}", "_", self.metadata.title)
-        self.filename = f"{self.metadata.author.name} - {clean_title}.epub"
-
     def make_new_chapter_url(self, url: furl, value: int) -> furl:
         url.path.segments[0] = f"Story-{self._story_id}-{value}"
         return url

@@ -11,6 +11,7 @@ import attr
 import pendulum
 from bs4 import BeautifulSoup, Tag
 from click import echo, style
+from ebooklib import epub
 from ebooklib.epub import EpubBook, EpubHtml, EpubItem, EpubNav, EpubNcx, write_epub
 from furl import furl
 from iso639 import to_iso639_1
@@ -66,12 +67,11 @@ class Story:
     _styles: List[str] = attr.ib(init=False, default=["style.css"])
     main_page: BeautifulSoup = attr.ib(init=False)
     chapter_select: str = attr.ib(init=False)
+    adult: bool = attr.ib(init=False, default=False)
+    force: bool = attr.ib(init=False, default=False)
+    book: EpubBook = attr.ib(init=False, default=None)
 
     ILLEGAL_CHARACTERS: ClassVar = r'[<>:"/\|?]'
-
-    @classmethod
-    def from_url(cls, url: furl, verbose: bool):
-        return cls(url, verbose)
 
     def _initialise(self):
         self.metadata = Metadata.from_url(self.url)
@@ -79,16 +79,18 @@ class Story:
         if main_page_request.status_code != codes.ok:
             exit(1)
         self.main_page = BeautifulSoup(main_page_request.content, "html5lib")
+        try:
+            self.book = epub.read_epub(self.filename) if not self.force else None
+        except AttributeError:
+            pass
 
     def run(self):
         echo(f"Downloading {self.url}")
         self._initialise()
         self.make_title_page()
+        self.get_filename()
         self.get_chapters()
         self.make_ebook()
-
-    def update_run(self):
-        self.run()
 
     def prepare_style(self, filename: str) -> EpubItem:
         cssfile = self.datasource / filename
@@ -118,9 +120,6 @@ class Story:
     def log(self, text: str, force: bool = False):
         if self.verbose:
             echo(text)
-        else:
-            with open("pyffdl.log", "a") as fp:
-                echo(text, file=fp)
         if force:
             echo(text)
             with open("pyffdl.log", "a") as fp:
@@ -137,6 +136,15 @@ class Story:
         else:
             self.metadata.chapters = [self.metadata.title]
 
+    def get_filename(self) -> None:
+        clean_title = sub(rf"{self.ILLEGAL_CHARACTERS}", "_", self.metadata.title)
+        pre = "[ADULT] " if self.adult else ""
+        self.filename = (
+            self.filename
+            if self.filename
+            else f"{pre}{self.metadata.author.name} - {clean_title}.epub"
+        )
+
     def make_title_page(self) -> None:
         """
         Parses the main page for information about the story and author.
@@ -149,7 +157,7 @@ class Story:
         """
         pass
 
-    def step_through_chapters(self) -> Iterator[EpubHtml]:
+    def step_through_chapters(self, chapters: list) -> Iterator[EpubHtml]:
         """
         Runs through the list of chapters and downloads each one.
         """
@@ -158,19 +166,24 @@ class Story:
             strlen(self.metadata.chapters) if strlen(self.metadata.chapters) > 2 else 2
         )
 
-        for index, title in enumerate(self.metadata.chapters):
-            try:
-                url_segment, title = title
-            except ValueError:
-                url_segment = index + 1
-            url = self.make_new_chapter_url(self.url.copy(), url_segment)
-            header = f"<h1>{title}</h1>"
-            raw_chapter = self.session.get(url)
-            text = header + self.get_raw_text(raw_chapter)
-            chapter_number = str(index + 1).zfill(chap_padding)
-            self.log(
-                f"Downloading chapter {style(chapter_number, bold=True, fg='blue')} - {style(title, fg='yellow')}"
-            )
+        for _index, title in enumerate(self.metadata.chapters):
+            index = _index + 1
+            chapter_number = str(index).zfill(chap_padding)
+            if index <= len(chapters):
+                html = chapters[_index]
+                text = str(BeautifulSoup(html.get_body_content(), "html5lib"))
+            else:
+                try:
+                    url_segment, title = title
+                except ValueError:
+                    url_segment = index
+                url = self.make_new_chapter_url(self.url.copy(), url_segment)
+                header = f"<h1>{title}</h1>"
+                raw_chapter = self.session.get(url)
+                text = header + self.get_raw_text(raw_chapter)
+                self.log(
+                    f"Downloading chapter {style(chapter_number, bold=True, fg='blue')} - {style(title, fg='yellow')}"
+                )
             chapter = EpubHtml(
                 title=title,
                 file_name=f"chapter{chapter_number}.xhtml",
@@ -180,6 +193,19 @@ class Story:
             for s in self.styles:
                 chapter.add_item(s)
             yield chapter
+
+    def get_cover(self) -> bytes:
+        try:
+            cover = self.book.get_item_with_id("cover-img")
+            return cover.content
+        except (FileNotFoundError, AttributeError):
+            with BytesIO() as b:
+                cover = Cover.create(
+                    self.metadata.title, self.metadata.author.name, self.datasource
+                )
+                cover.run()
+                cover.image.save(b, format="jpeg")
+                return b.getvalue()
 
     def make_ebook(self) -> None:
         """
@@ -197,15 +223,12 @@ class Story:
         book.add_item(ncx)
         book.add_item(nav)
 
-        book.toc = [x for x in self.step_through_chapters()]
+        current_chapters = [x for x in self.book.get_items_of_type(9) if x.is_chapter()] if self.book else []
 
-        with BytesIO() as b:
-            cover = Cover.create(
-                self.metadata.title, self.metadata.author.name, self.datasource
-            )
-            cover.run()
-            cover._image.save(b, format="jpeg")
-            book.set_cover("cover.jpg", b.getvalue())
+        book.toc = [x for x in self.step_through_chapters(current_chapters)]
+
+        cover = self.get_cover()
+        book.set_cover("cover.jpg", cover)
 
         template = Template(filename=str(self.datasource / "title.mako"))
 
