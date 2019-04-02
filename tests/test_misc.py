@@ -34,8 +34,8 @@ def test_in_dictionary():
 @pytest.mark.parametrize(
     "filename,url",
     [
-        ("good_test.epub", "http://www.fanfiction.net/s/7954090/1/"),
-        ("bad_test.epub", None),
+        ("good_file.epub", "http://www.fanfiction.net/s/7954090/1/"),
+        ("bad_file.epub", None),
     ],
 )
 def test_get_url_from_file(filename, url):
@@ -57,8 +57,8 @@ def test_clean_text():
         clean_text(7)
     with pytest.raises(TypeError):
         clean_text(18.7)
-    assert clean_text({x for x in range(10)}) == "0123456789"
-    assert clean_text([x for x in range(10)]) == "0123456789"
-    assert clean_text(["foo", "bar"]) == "foobar"
-    assert clean_text(["fo o", "ba          r"]) == "fo oba r"
-    assert clean_text((" foo      ", " bar")) == "foobar"
+    assert clean_text({x for x in range(10)}) == "0 1 2 3 4 5 6 7 8 9"
+    assert clean_text([x for x in range(10)]) == "0 1 2 3 4 5 6 7 8 9"
+    assert clean_text(["foo", "bar"]) == "foo bar"
+    assert clean_text(["fo o", "ba          r"]) == "fo o ba r"
+    assert clean_text((" foo      ", " bar")) == "foo bar"
