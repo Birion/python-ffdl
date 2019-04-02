@@ -71,7 +71,7 @@ def cli_download(
 ) -> None:
     urls = [(x, None) for x in url_list]
     if from_file:
-        urls += [x.strip("\n") for x in from_file.readlines()]
+        urls += [(x.strip("\n"), None) for x in from_file.readlines()]
     download(urls, verbose)
 
 
