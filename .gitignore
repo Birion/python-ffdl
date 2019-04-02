@@ -102,3 +102,4 @@ ENV/
 /ffdl.py
 /Pipfile.lock
 /.envrc
+*.ipynb
