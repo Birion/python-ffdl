@@ -58,13 +58,14 @@ class TwistingTheHellmouthStory(Story):
         empty_div = div.find("div", style="clear:both;")
         empty_div.extract()
         raw_text = clean_text(div.contents)
-        _clean_text = sub(r"\s*(<br/?>){2,}\s*", "</p><p>", raw_text) + "</p>"
+        _clean_text = sub(r"\s*(<br/?>\s*){2,}\s*", "</p><p>", raw_text) + "</p>"
         _clean_text = sub(r"<p></p>", "", _clean_text)
         if _clean_text.startswith("<"):
             _clean_text = sub(r"(</h\d>)\s*([^<])", r"\1<p>\2", _clean_text)
         else:
             _clean_text = "<p>" + _clean_text
-
+        _clean_text = sub("</p><p>", "</p>\n<p>", _clean_text)
+        _clean_text = sub(r'<p/?>\s*<div class=.hr.>\s*<hr/?>\s*</div>\s*<br/?>\s*', "<hr/>\n<p>", _clean_text)
         return _clean_text
 
     def make_title_page(self) -> None:
