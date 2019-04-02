@@ -103,4 +103,4 @@ def strlen(data: list) -> int:
 def clean_text(text: Union[List, Tuple, Set]) -> str:
     if not (isinstance(text, list) or isinstance(text, tuple) or isinstance(text, set)):
         raise TypeError
-    return "".join(sub(r"\s+", " ", str(x).strip()) for x in text)
+    return " ".join(sub(r"\s+", " ", str(x).strip()) for x in text)

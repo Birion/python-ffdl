@@ -223,7 +223,15 @@ class Story:
         book.add_item(ncx)
         book.add_item(nav)
 
-        current_chapters = [x for x in self.book.get_items_of_type(9) if x.is_chapter()] if self.book else []
+        current_chapters = (
+            [
+                x
+                for x in self.book.get_items_of_type(9)
+                if x.is_chapter() and x.file_name.startswith("chapter")
+            ]
+            if self.book
+            else []
+        )
 
         book.toc = [x for x in self.step_through_chapters(current_chapters)]
 
