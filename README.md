@@ -17,7 +17,7 @@ Fanfiction downloader
 
 ### Update an existing story file
 
-`pyffdl.py update <EPUB FILE>`
+`pyffdl.py update [--force] [--backup] <EPUB FILE>`
 
 ## Supported sites
 

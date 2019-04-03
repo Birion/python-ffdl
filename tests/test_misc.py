@@ -23,19 +23,11 @@ def test_turn_into_dictionary():
     assert turn_into_dictionary(["Romance"]) == {'Genres': ['Romance']}
 
 
-def test_in_dictionary():
-    dic = {"foo": "bar", "baz": None, "1": 1, 1: "1"}
-    assert in_dictionary(dic, "foo") == "bar"
-    assert not in_dictionary(dic, "bar")
-    assert in_dictionary(dic, "1") == 1
-    assert in_dictionary(dic, 1) == "1"
-
-
 @pytest.mark.parametrize(
     "filename,url",
     [
-        ("good_test.epub", "http://www.fanfiction.net/s/7954090/1/"),
-        ("bad_test.epub", None),
+        ("good_file.epub", "http://www.fanfiction.net/s/7954090/1/"),
+        ("bad_file.epub", None),
     ],
 )
 def test_get_url_from_file(filename, url):
@@ -57,8 +49,8 @@ def test_clean_text():
         clean_text(7)
     with pytest.raises(TypeError):
         clean_text(18.7)
-    assert clean_text({x for x in range(10)}) == "0123456789"
-    assert clean_text([x for x in range(10)]) == "0123456789"
-    assert clean_text(["foo", "bar"]) == "foobar"
-    assert clean_text(["fo o", "ba          r"]) == "fo oba r"
-    assert clean_text((" foo      ", " bar")) == "foobar"
+    assert clean_text({x for x in range(10)}) == "<p>0 1 2 3 4 5 6 7 8 9</p>\n\n"
+    assert clean_text([x for x in range(10)]) == "<p>0 1 2 3 4 5 6 7 8 9</p>\n\n"
+    assert clean_text(["foo", "bar"]) == "<p>foo bar</p>\n\n"
+    assert clean_text(["fo o", "ba          r"]) == "<p>fo o ba r</p>\n\n"
+    assert clean_text((" foo      ", " bar")) == "<p>foo bar</p>\n\n"

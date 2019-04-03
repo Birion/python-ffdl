@@ -10,7 +10,7 @@ from furl import furl
 from requests import Response
 
 from pyffdl.sites.story import Story
-from pyffdl.utilities import in_dictionary, turn_into_dictionary
+from pyffdl.utilities import turn_into_dictionary
 from pyffdl.utilities.misc import clean_text
 
 
@@ -69,9 +69,9 @@ class FanFictionNetStory(Story):
 
         time_pattern = compile(r'xutime="(\d+)"')
 
-        published = in_dictionary(_data, "Published")
-        updated = in_dictionary(_data, "Updated")
-        rating = in_dictionary(_data, "Rated")
+        published = _data.get("Published")
+        updated = _data.get("Updated")
+        rating = _data.get("Rated")
 
         self.metadata.title = _header.find("b").string
         self.metadata.author.name = _author.string
@@ -82,9 +82,9 @@ class FanFictionNetStory(Story):
         self.metadata.category = (
             self.main_page.find(id="pre_story_links").find("a").string
         )
-        self.metadata.genres = in_dictionary(_data, "Genres")
-        self.metadata.characters = in_dictionary(_data, "Characters")
-        self.metadata.words = in_dictionary(_data, "Words")
+        self.metadata.genres = _data.get("Genres")
+        self.metadata.characters = _data.get("Characters")
+        self.metadata.words = _data.get("Words")
         if published:
             published = time_pattern.search(published).group(1)
             self.metadata.published = check_date(int(published))
@@ -93,8 +93,8 @@ class FanFictionNetStory(Story):
             self.metadata.updated = check_date(int(updated))
         else:
             self.metadata.updated = None
-        self.metadata.language = in_dictionary(_data, "Language")
-        self.metadata.complete = in_dictionary(_data, "Status")
+        self.metadata.language = _data.get("Language")
+        self.metadata.complete = _data.get("Status")
 
     def make_new_chapter_url(self, url: furl, value: int) -> furl:
         url.path.segments[-2] = value

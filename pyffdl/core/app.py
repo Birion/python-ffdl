@@ -129,5 +129,5 @@ def cli_update(
     if backup:
         for filename in filenames:
             shutil.copy(f"{filename}", f"{filename}.bck")
-    stories = [(get_url_from_file(x), str(x)) for x in filenames]
+    stories = [(get_url_from_file(x), str(x) if not force else None) for x in filenames]
     download(stories, verbose, force)

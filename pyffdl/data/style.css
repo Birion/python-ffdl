@@ -8,6 +8,8 @@ p {
   margin: auto;
   text-align: justify;
   text-indent: 1.25em; }
+  p.center {
+    text-indent: 0; }
 
 div p:nth-of-type(1) {
   text-indent: 0; }
@@ -22,15 +24,14 @@ h3 {
   h3 + p {
     text-indent: 0; }
 
+hr,
 .header,
 .center {
   text-align: center; }
+  hr + p,
   .header + p,
   .center + p {
     text-indent: 0; }
-
-p.center {
-  text-indent: 0; }
 
 .author {
   margin: 1em auto;
