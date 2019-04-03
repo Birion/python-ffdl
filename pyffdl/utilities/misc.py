@@ -1,4 +1,4 @@
-from re import sub
+from re import sub, compile
 from typing import KeysView, List, Set, Tuple, Union
 import logging
 
@@ -56,25 +56,25 @@ def turn_into_dictionary(input_data: List[str]) -> dict:
             key = _[0]
             val = _[1] if not _[1].isdigit() else int(_[1])
         else:
-            lang = iso639.find(i)
-            if lang:
-                key = "Language"
-                val = lang["name"]
-            else:
+            if i == "OC":
                 key = "Characters"
-                val = [x.strip() for x in i.split(",")]
-                for x in i.split("/"):
-                    if x in GENRES:
-                        key = "Genres"
-                        val = i.split("/")
-                        break
+                val = i
+            else:
+                lang = iso639.find(i)
+                if lang:
+                    key = "Language"
+                    val = lang["name"]
+                else:
+                    key = "Characters"
+                    val = [x.strip() for x in i.split(",")]
+                    for x in i.split("/"):
+                        if x in GENRES:
+                            key = "Genres"
+                            val = i.split("/")
+                            break
         dic[key] = val
 
     return dic
-
-
-def in_dictionary(dic: dict, key: Union[str, int, tuple]) -> str:
-    return dic[key] if key in dic.keys() else None
 
 
 def get_url_from_file(file: Union[str, click.Path]) -> Union[str, None]:
@@ -103,4 +103,30 @@ def strlen(data: list) -> int:
 def clean_text(text: Union[List, Tuple, Set]) -> str:
     if not (isinstance(text, list) or isinstance(text, tuple) or isinstance(text, set)):
         raise TypeError
-    return " ".join(sub(r"\s+", " ", str(x).strip()) for x in text)
+    raw_text = " ".join(sub(r"\s+", " ", str(x).strip()) for x in text)
+    raw_text = sub(r"\s*(<br/?>\s*){2,}\s*", "</p><p>", raw_text)
+    if not raw_text.endswith("</p>"):
+        raw_text = raw_text + "</p>"
+    raw_text = sub(r"<p></p>", "", raw_text)
+    raw_text = sub("</p><p>", "</p>\n<p>", raw_text)
+    raw_text = sub(r"<hr", r"\n<hr", raw_text)
+    raw_text = sub(r"\s([.!?])", r"\1", raw_text)
+    if raw_text.startswith("<"):
+        raw_text = sub(r"(</h\d>)\s*([^<])", r"\1<p>\2", raw_text)
+    else:
+        raw_text = "<p>" + raw_text
+    raw_text = sub(r'<p/?>\s*<div class=.hr.>\s*<hr/?>\s*</div>\s*<br/?>\s*', "<hr/>\n<p>", raw_text)
+    raw_text = sub(r"(</p>|</h\d>)", r"\1\n\n", raw_text)
+    raw_text = sub(r"(<p>|<h\d>)", r"\n\n\1", raw_text)
+    raw_text = sub(r"\n(\s*\n)+", r"\n\n", raw_text)
+    raw_text = sub(r"^\s+", "", raw_text)
+    raw_text = sub(r"\s+(</p>|</h\d>)", r"\1", raw_text)
+    raw_text = sub(r"\.\.+", "&hellip;", raw_text)
+    raw_text = sub(r"(<hr[^>]*>)\s*(.+)", r"\1\n\n<p>\2</p>", raw_text)
+
+    parsed_text = BeautifulSoup(raw_text, "html5lib")
+    for tag in parsed_text.find_all("p", string=compile(r"^(?P<a>.)(?P=a)+$")):
+        tag["class"] = "center"
+    for tag in parsed_text.find_all("hr"):
+        tag["class"] = "center"
+    return "".join(str(x) for x in parsed_text.body.contents)

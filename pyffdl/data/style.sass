@@ -16,6 +16,9 @@ p
   text-align: justify
   text-indent: 1.25em
 
+  &.center
+    +no-indent
+
 div
   p:nth-of-type(1)
     +no-indent
@@ -29,14 +32,11 @@ h3
   & + p
     +no-indent
 
+hr,
 .header,
 .center
   +center
   & + p
-    +no-indent
-
-p
-  &.center
     +no-indent
 
 .author

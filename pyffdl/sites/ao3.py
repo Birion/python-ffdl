@@ -27,7 +27,7 @@ class ArchiveOfOurOwnStory(Story):
         Returns only the text of the chapter
         """
         soup = BeautifulSoup(page.content, "html5lib")
-        raw_text = clean_text(
+        return clean_text(
             [
                 tag
                 for contents in soup.select("div.userstuff")
@@ -42,11 +42,6 @@ class ArchiveOfOurOwnStory(Story):
                 )
             ]
         )
-        _clean_text = sub(r"\s*<br/>\s*<br/>\s*", "</p><p>", raw_text)
-        parsed_text = BeautifulSoup(_clean_text, "html5lib")
-        for tag in parsed_text.find_all("p", string=compile(r"^(?P<a>.)(?P=a)+$")):
-            tag["class"] = "center"
-        return "".join(str(x) for x in parsed_text.body.contents)
 
     @staticmethod
     def chapter_parser(value: Tag) -> Tuple[int, str]:
