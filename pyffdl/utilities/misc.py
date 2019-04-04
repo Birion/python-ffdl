@@ -110,7 +110,7 @@ def clean_text(text: Union[List, Tuple, Set]) -> str:
     raw_text = sub(r"<p></p>", "", raw_text)
     raw_text = sub("</p><p>", "</p>\n<p>", raw_text)
     raw_text = sub(r"<hr", r"\n<hr", raw_text)
-    raw_text = sub(r"\s([.!?])", r"\1", raw_text)
+    raw_text = sub(r"\s(\.[^0-9]|[!?])", r"\1", raw_text)
     if raw_text.startswith("<"):
         raw_text = sub(r"(</h\d>)\s*([^<])", r"\1<p>\2", raw_text)
     else:
