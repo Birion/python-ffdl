@@ -1,9 +1,8 @@
-from pathlib import Path
-from re import sub, match
-from typing import List, Tuple, Union
+from re import match, sub
+from typing import List, Tuple
 
 import attr
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 from furl import furl
 from requests import Response
 

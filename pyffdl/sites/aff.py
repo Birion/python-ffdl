@@ -5,8 +5,6 @@ from re import sub
 import attr
 import pendulum
 from bs4 import BeautifulSoup, Tag
-from click import echo, style
-from ebooklib.epub import EpubHtml
 from furl import furl
 from requests import Response, get
 

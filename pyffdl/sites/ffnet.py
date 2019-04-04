@@ -1,12 +1,12 @@
 from datetime import date
 from re import compile, sub
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import attr
 import pendulum
-from bs4 import BeautifulSoup, Tag
-from click import echo
+from bs4 import BeautifulSoup
 from furl import furl
+from pendulum import DateTime
 from requests import Response
 
 from pyffdl.sites.story import Story
@@ -31,10 +31,13 @@ class FanFictionNetStory(Story):
         Parses the main page for information about the story and author.
         """
 
-        def check_date(timestamp: int) -> date:
-            if not timestamp:
-                return pendulum.from_timestamp(0, "local")
-            return pendulum.from_timestamp(timestamp, "local")
+        # noinspection PyTypeChecker
+        def check_date(data: Dict[str, Union[str, int]], key: str) -> Union[DateTime, None]:
+            timestamp = data.get(key)
+            if timestamp:
+                return pendulum.from_timestamp(timestamp, "UTC")
+            else:
+                return None
 
         def parse_characters(characters: str) -> Dict[str, List[str]]:
             out_couples = []
@@ -53,46 +56,30 @@ class FanFictionNetStory(Story):
                 out_singles = characters.split(", ")
             return {"couples": out_couples, "singles": out_singles}
 
-        _header = self.main_page.find(id="profile_top")
-        _author = _header.find("a", href=compile(r"^/u/\d+/"))
-        _data = turn_into_dictionary(
-            [
-                x.strip()
-                for x in " ".join(
-                    str(x) for x in _header.find(class_="xgray").contents
-                ).split(" - ")
-            ]
-        )
+        header = self.main_page.find(id="profile_top")
+        _author = header.find("a", href=compile(r"^/u/\d+/"))
+        tags = [
+            x.string.strip() if x.name != "span" else x["data-xutime"]
+            for x in header.find(class_="xgray").children
+        ]
+        _data = turn_into_dictionary(sub(r"\s+", " ", " ".join(tags)).split(" - "))
 
         if "Characters" in _data.keys():
             _data["Characters"] = parse_characters(", ".join(_data["Characters"]))
 
-        time_pattern = compile(r'xutime="(\d+)"')
-
-        published = _data.get("Published")
-        updated = _data.get("Updated")
-        rating = _data.get("Rated")
-
-        self.metadata.title = _header.find("b").string
+        self.metadata.title = header.find("b").string
         self.metadata.author.name = _author.string
         self.metadata.author.url = self.url.copy().set(path=_author["href"])
-        self.metadata.summary = _header.find("div", class_="xcontrast_txt").string
-        if rating:
-            self.metadata.rating = BeautifulSoup(rating, "html5lib").find("a").string
+        self.metadata.summary = header.find("div", class_="xcontrast_txt").string
+        self.metadata.rating = _data.get("Rated")
         self.metadata.category = (
             self.main_page.find(id="pre_story_links").find("a").string
         )
         self.metadata.genres = _data.get("Genres")
         self.metadata.characters = _data.get("Characters")
         self.metadata.words = _data.get("Words")
-        if published:
-            published = time_pattern.search(published).group(1)
-            self.metadata.published = check_date(int(published))
-        if updated:
-            updated = time_pattern.search(updated).group(1)
-            self.metadata.updated = check_date(int(updated))
-        else:
-            self.metadata.updated = None
+        self.metadata.published = check_date(_data, "Published")
+        self.metadata.updated = check_date(_data, "Updated")
         self.metadata.language = _data.get("Language")
         self.metadata.complete = _data.get("Status")
 

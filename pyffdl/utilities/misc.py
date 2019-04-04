@@ -1,4 +1,4 @@
-from re import sub, compile
+from re import sub, compile, match
 from typing import KeysView, List, Set, Tuple, Union
 import logging
 
@@ -10,6 +10,7 @@ import click
 GENRES = [
     "Adventure",
     "Angst",
+    "Comfort",
     "Crime",
     "Drama",
     "Family",
@@ -18,7 +19,7 @@ GENRES = [
     "General",
     "Horror",
     "Humor",
-    "Hurt/Comfort",
+    "Hurt",
     "Mystery",
     "Parody",
     "Poetry",
@@ -48,33 +49,39 @@ def turn_into_dictionary(input_data: List[str]) -> dict:
     """
     if not isinstance(input_data, list):
         raise TypeError(f"'{type(input_data)}' cannot be used here")
-    dic = {}
-    key, val = None, None
-    for index, i in enumerate(input_data):
-        if ":" in i:
-            _ = [x.strip() for x in i.split(": ")]
-            key = _[0]
-            val = _[1] if not _[1].isdigit() else int(_[1])
-        else:
-            if i == "OC":
-                key = "Characters"
-                val = i
+    result_dictionary = {}
+    for index, data in enumerate(input_data):
+        if ":" in data:
+            temp_values = [x.strip() for x in data.split(": ")]
+            key = temp_values[0]
+            if match(r"^\d+(,\d+)*$", temp_values[1]):
+                temp_values[1] = sub(",", "", temp_values[1])
+                val = int(temp_values[1])
             else:
-                lang = iso639.find(i)
+                val = temp_values[1]
+        else:
+            if data == "OC":
+                key = "Characters"
+                val = data
+            elif data == "Complete":
+                key = "Status"
+                val = data
+            else:
+                lang = iso639.find(language=data)
                 if lang:
                     key = "Language"
                     val = lang["name"]
                 else:
                     key = "Characters"
-                    val = [x.strip() for x in i.split(",")]
-                    for x in i.split("/"):
+                    val = [x.strip() for x in data.split(",")]
+                    for x in data.split("/"):
                         if x in GENRES:
                             key = "Genres"
-                            val = i.split("/")
+                            val = data.split("/")
                             break
-        dic[key] = val
+        result_dictionary[key] = val
 
-    return dic
+    return result_dictionary
 
 
 def get_url_from_file(file: Union[str, click.Path]) -> Union[str, None]:

@@ -1,17 +1,13 @@
-from datetime import date
-from re import compile, sub, match
-from typing import Dict, List, Union
+from re import compile, match, sub
 
-import pendulum
-from bs4 import BeautifulSoup, Tag
-from click import echo
-from furl import furl
-from requests import Response
 import attr
 import iso639
+import pendulum
+from bs4 import BeautifulSoup
+from furl import furl
+from requests import Response
 
 from pyffdl.sites.story import Story
-from pyffdl.utilities import turn_into_dictionary
 from pyffdl.utilities.misc import clean_text
 
 
@@ -27,12 +23,12 @@ class Header:
     hits = attr.ib()
     published = attr.ib(
         converter=lambda x: pendulum.from_format(
-            x, "DD MMM YY", tz=pendulum.local_timezone()
+            x, "DD MMM YY", tz="UTC"
         )
     )
     updated = attr.ib(
         converter=lambda x: pendulum.from_format(
-            x, "DD MMM YY", tz=pendulum.local_timezone()
+            x, "DD MMM YY", tz="UTC"
         )
     )
     complete = attr.ib(converter=lambda x: x == "Yes")

@@ -1,15 +1,15 @@
-import logging
 from datetime import date, datetime
 from io import BytesIO
 from pathlib import Path
 from re import sub
 from sys import exit
-from typing import Iterator, List, Tuple, Union, ClassVar
+from typing import ClassVar, Iterator, List, Tuple, Union
 from uuid import uuid4
 
 import attr
 import pendulum
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
+from bs4.element import Tag
 from click import echo, style
 from ebooklib import epub
 from ebooklib.epub import EpubBook, EpubHtml, EpubItem, EpubNav, EpubNcx, write_epub
@@ -48,10 +48,6 @@ class Metadata:
     tags: List[str] = attr.ib(init=False, factory=list)
     chapters: List[str] = attr.ib(init=False, factory=list)
 
-    @classmethod
-    def from_url(cls, url: furl):
-        return cls(url)
-
 
 @attr.s(auto_attribs=True)
 class Story:
@@ -74,7 +70,7 @@ class Story:
     ILLEGAL_CHARACTERS: ClassVar = r'[<>:"/\|?]'
 
     def _initialise(self):
-        self.metadata = Metadata.from_url(self.url)
+        self.metadata = Metadata(self.url)
         main_page_request = self.session.get(self.url)
         if main_page_request.status_code != codes.ok:
             exit(1)
@@ -85,7 +81,7 @@ class Story:
             pass
 
     def run(self):
-        echo(f"Downloading {self.url}")
+        self.log(f"Downloading {self.url}", force=True)
         self._initialise()
         self.make_title_page()
         self.get_filename()
