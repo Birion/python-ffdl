@@ -30,12 +30,15 @@ class AdultFanFictionStory(Story):
         contents = table("tr")[5].td
 
         if contents("p"):
-            return "".join(map(str, contents("p")))
+            return "".join(str(x) for x in contents("p"))
         else:
-            contents = sub(r"<td>", "<p>", str(contents))
-            contents = sub(r"</td>", "</p>", contents)
-            contents = sub(r"<br/?>", "</p><p>", contents)
-            contents = sub(r"<p></p>", "", contents)
+            replacement_strings = [
+                ("td>", "p>"),
+                (r"<br/?>", "</p><p>"),
+                ("<p></p>", "")
+            ]
+            for r, s in replacement_strings:
+                contents = sub(r, s, str(contents))
             return contents
 
     @staticmethod
@@ -47,6 +50,7 @@ class AdultFanFictionStory(Story):
         Parses the main page for information about the story and author.
         """
 
+        # noinspection PyTypeChecker
         def check_date(timestr: str) -> date:
             if not timestr:
                 return pendulum.from_timestamp(0, "local")
