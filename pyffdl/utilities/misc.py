@@ -118,6 +118,7 @@ def clean_text(text: Union[List, Tuple, Set]) -> str:
         (r"</?p></p>", ""),
         ("</p><p>", "</p>\n<p>"),
         (r"<hr", r"\n<hr"),
+        (r"(<(strong|em|i|b)>.+) (</\2>)", r"\1\3 "),
         (r"\s(\.[^0-9]|[!?])", r"\1"),
         (r"<p/?>\s*<div class=.hr.>\s*<hr/?>\s*</div>\s*<br/?>\s*", "<hr/>\n<p>"),
         (r"(</p>|</h\d>)", r"\1\n\n"),

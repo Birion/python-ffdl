@@ -30,10 +30,8 @@ class ArchiveOfOurOwnStory(Story):
         return clean_text(
             [
                 tag
-                for contents in soup.select("div.userstuff")
-                for tag in contents.children
+                for tag in soup.select_one("div.userstuff").select("p, h1, h2, h3, h4, h5, h6, hr")
                 if isinstance(tag, Tag)
-                and tag.name != "div"
                 and tag.text != "Chapter Text"
                 and (
                     "class" not in tag.attrs
