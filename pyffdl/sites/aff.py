@@ -41,7 +41,7 @@ class AdultFanFictionStory(Story):
 
     @property
     def select(self) -> str:
-        return "table:nth-of-type(3) .dropdown-content a"
+        return ".dropdown > .dropdown-content > a"
 
     def make_title_page(self) -> None:
         """
