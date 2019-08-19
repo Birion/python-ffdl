@@ -54,10 +54,12 @@ class HTMLStory(Story):
         Parses the main page for information about the story and author.
         """
         self.metadata.title = self.title
+        # pylint:disable=assigning-non-slot
         self.metadata.author.name = self.author
+        # pylint:disable=assigning-non-slot
         self.metadata.author.url = None
         self.metadata.language = "English"
-        self.url = None
+        self.url = furl(None)
 
     def make_new_chapter_url(self, url: furl, value: str) -> furl:
         return furl(value)

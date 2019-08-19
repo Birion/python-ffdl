@@ -1,6 +1,7 @@
 import pytest
 from pathlib import Path
 from pyffdl.utilities.misc import *
+from pyffdl.sites.ffnet import FanFictionNetStory
 
 
 def test_list2text():
@@ -10,17 +11,18 @@ def test_list2text():
 
 
 def test_turn_into_dictionary():
+    story = FanFictionNetStory("")
     with pytest.raises(TypeError):
-        turn_into_dictionary(7)
+        story.turn_into_dictionary(7)
     with pytest.raises(TypeError):
-        turn_into_dictionary([7])
+        story.turn_into_dictionary([7])
     with pytest.raises(TypeError):
-        turn_into_dictionary("Chapter: 7")
-    assert turn_into_dictionary(["English"]) == {"Language": "English"}
-    assert turn_into_dictionary(["Updated: 12.2.2019"]) == {"Updated": "12.2.2019"}
-    assert turn_into_dictionary(["Pages: 173"]) == {"Pages": 173}
-    assert turn_into_dictionary(["Harry, [Hermione, Ron]"]) == {'Characters': ['Harry', '[Hermione', 'Ron]']}
-    assert turn_into_dictionary(["Romance"]) == {'Genres': ['Romance']}
+        story.turn_into_dictionary("Chapter: 7")
+    assert story.turn_into_dictionary(["English"]) == {"Language": "English"}
+    assert story.turn_into_dictionary(["Updated: 12.2.2019"]) == {"Updated": "12.2.2019"}
+    assert story.turn_into_dictionary(["Pages: 173"]) == {"Pages": 173}
+    assert story.turn_into_dictionary(["Harry, [Hermione, Ron]"]) == {'Characters': ['Harry', '[Hermione', 'Ron]']}
+    assert story.turn_into_dictionary(["Romance"]) == {'Genres': ['Romance']}
 
 
 @pytest.mark.parametrize(

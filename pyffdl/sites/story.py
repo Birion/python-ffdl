@@ -1,12 +1,13 @@
+import re
 from datetime import date, datetime
 from io import BytesIO
 from pathlib import Path
-from re import sub
-from sys import exit
+from sys import exit as sysexit
 from typing import ClassVar, Iterator, List, Tuple, Union
 from uuid import uuid4
 
 import attr
+import iso639
 import pendulum
 from bs4 import BeautifulSoup
 from bs4.element import Tag
@@ -14,7 +15,6 @@ from click import echo, style
 from ebooklib import epub
 from ebooklib.epub import EpubBook, EpubHtml, EpubItem, EpubNav, EpubNcx, write_epub
 from furl import furl
-from iso639 import to_iso639_1
 from mako.template import Template
 from requests import Response, Session, codes
 
@@ -25,7 +25,7 @@ from pyffdl.utilities.misc import strlen
 @attr.s
 class Author:
     name: str = attr.ib(factory=str)
-    url: furl = attr.ib(factory=furl)
+    url: furl = attr.ib(factory=furl, converter=furl)
 
 
 @attr.s
@@ -52,28 +52,32 @@ class Metadata:
 @attr.s(auto_attribs=True)
 class Story:
     url: furl = attr.ib(validator=attr.validators.instance_of(furl), converter=furl)
-    verbose: bool = attr.ib()
 
-    metadata: Metadata = attr.ib(init=False, default=Metadata(furl("")))
     datasource: Path = attr.ib(
         init=False, default=(Path(__file__) / ".." / ".." / "data").resolve()
     )
-    filename: str = attr.ib(init=False, default=None)
     session: Session = attr.ib(init=False, factory=Session)
-    _styles: List[str] = attr.ib(init=False, default=["style.css"])
     main_page: BeautifulSoup = attr.ib(init=False)
-    chapter_select: str = attr.ib(init=False)
-    adult: bool = attr.ib(init=False, default=False)
-    force: bool = attr.ib(init=False, default=False)
     book: EpubBook = attr.ib(init=False, default=None)
 
     ILLEGAL_CHARACTERS: ClassVar = r'[<>:"/\|?]'
 
+    def __attrs_post_init__(self):
+        self._filename = ""
+        self._verbose = True
+        self._force = False
+        self._styles = ["style.css"]
+        self._metadata = Metadata(self.url)
+
+        self._init()
+
+    def _init(self):
+        pass
+
     def _initialise(self):
-        self.metadata = Metadata(self.url)
         main_page_request = self.session.get(self.url)
         if main_page_request.status_code != codes.ok:
-            exit(1)
+            sysexit(1)
         self.main_page = BeautifulSoup(main_page_request.content, "html5lib")
         try:
             self.book = epub.read_epub(self.filename) if not self.force else None
@@ -99,22 +103,60 @@ class Story:
             )
 
     @property
-    def styles(self):
+    def styles(self) -> List[EpubItem]:
+        # pylint:disable=not-an-iterable
         return [self.prepare_style(file) for file in self._styles]
+
+    @property
+    def select(self) -> str:
+        return ""
+
+    @property
+    def is_adult(self) -> bool:
+        return False
+
+    @property
+    def is_verbose(self) -> bool:
+        return self._verbose
+
+    @is_verbose.setter
+    def is_verbose(self, value):
+        self._verbose = value
+
+    @property
+    def filename(self):
+        return self._filename
+
+    @filename.setter
+    def filename(self, value):
+        self._filename = value
+
+    @property
+    def metadata(self):
+        return self._metadata
+
+    @property
+    def force(self):
+        return self._force
+
+    @force.setter
+    def force(self, value):
+        self._force = value
 
     @staticmethod
     def get_raw_text(page: Response) -> str:
         """
         Returns only the text of the chapter
         """
-        pass
 
     @staticmethod
     def chapter_parser(value: Tag) -> Union[str, Tuple[int, str]]:
-        return sub(r"\d+\.\s+", "", value.text)
+        """
+        Processes the chapter titles to be stored in a usable format
+        """
 
     def log(self, text: str, force: bool = False):
-        if self.verbose:
+        if self.is_verbose:
             echo(text)
         if force:
             echo(text)
@@ -125,16 +167,18 @@ class Story:
         """
         Gets the number of chapters and the base template for chapter URLs
         """
-        list_of_chapters = self.main_page.select(self.chapter_select)
+        list_of_chapters = self.main_page.select(self.select)
 
         if list_of_chapters:
-            self.metadata.chapters = [self.chapter_parser(x) for x in list_of_chapters]
+            self.metadata.chapters = [
+                self.chapter_parser(x) for x in set(list_of_chapters)
+            ]
         else:
             self.metadata.chapters = [self.metadata.title]
 
     def get_filename(self) -> None:
-        clean_title = sub(rf"{self.ILLEGAL_CHARACTERS}", "_", self.metadata.title)
-        pre = "[ADULT] " if self.adult else ""
+        clean_title = re.sub(rf"{self.ILLEGAL_CHARACTERS}", "_", self.metadata.title)
+        pre = "[ADULT] " if self.is_adult else ""
         self.filename = (
             self.filename
             if self.filename
@@ -145,13 +189,11 @@ class Story:
         """
         Parses the main page for information about the story and author.
         """
-        pass
 
     def make_new_chapter_url(self, url: furl, value: int) -> furl:
         """
         Update base url with next chapter format.
         """
-        pass
 
     def step_through_chapters(self, chapters: list) -> Iterator[EpubHtml]:
         """
@@ -173,6 +215,7 @@ class Story:
                     url_segment, title = title
                 except ValueError:
                     url_segment = index
+                # pylint:disable=assignment-from-no-return
                 url = self.make_new_chapter_url(self.url.copy(), url_segment)
                 header = f"<h1>{title}</h1>"
                 raw_chapter = self.session.get(url)
@@ -210,7 +253,7 @@ class Story:
         book = EpubBook()
         book.set_identifier(str(uuid4()))
         book.set_title(self.metadata.title)
-        book.set_language(to_iso639_1(self.metadata.language))
+        book.set_language(iso639.to_iso639_1(self.metadata.language))
         book.add_author(self.metadata.author.name)
 
         nav = EpubNav()

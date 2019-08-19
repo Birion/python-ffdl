@@ -1,7 +1,6 @@
 import random
-from math import ceil
-from pathlib import Path
 import re
+from pathlib import Path
 
 import attr
 from PIL import Image, ImageDraw, ImageEnhance, ImageFont

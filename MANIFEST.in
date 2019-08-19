@@ -1,5 +1,6 @@
 include pyffdl/data/title.mako
 include pyffdl/data/style.css
+include pyffdl/data/genres
 include pyffdl/data/font/*
 include pyffdl/data/covers/*
 include README.md

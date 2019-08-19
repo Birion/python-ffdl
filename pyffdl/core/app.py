@@ -33,7 +33,8 @@ def download(
             host = ".".join(furl(address).host.split(".")[-2:])
             try:
                 Story = AVAILABLE_SITES[host]
-                story = Story(furl(address), verbose)
+                story = Story(furl(address))
+                story.verbose = verbose
                 story.force = force
                 if filename:
                     story.filename = filename
@@ -105,8 +106,8 @@ def cli_simple(
         author=author,
         title=title,
         url=furl("http://httpbin.org/status/200"),
-        verbose=verbose,
     )
+    story.verbose = verbose
     story.run()
 
 

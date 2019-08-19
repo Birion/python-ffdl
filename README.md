@@ -13,6 +13,8 @@ Fanfiction downloader
 
 `pyffdl download [--from <URL FILE>] [<URL>[ <URL>[...]]]`
 
+The `simple` command downloads a raw list of HTML files and collates them in an ebook.
+
 `pyffdl simple --author <NAME> --title <TITLE> [--from <URL FILE>] [<CHAPTER URL>[ <CHAPTER URL>[...]]]`
 
 ### Update an existing story file

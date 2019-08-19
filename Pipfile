@@ -7,6 +7,7 @@ verify_ssl = true
 pre-commit = "*"
 jupyter = "*"
 pytest = "*"
+prospector = {extras = ["with_mypy", "with_pyroma", "with_vulture"],version = "*"}
 
 [packages]
 attrs = ">=18"

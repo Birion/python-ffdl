@@ -1,88 +1,18 @@
-from re import sub, compile, match
+import re
 from typing import KeysView, List, Set, Tuple, Union
-import logging
 
-import attr
+import click
 from bs4 import BeautifulSoup
 from ebooklib import epub
-import iso639
-import click
-
-GENRES = [
-    "Adventure",
-    "Angst",
-    "Comfort",
-    "Crime",
-    "Drama",
-    "Family",
-    "Fantasy",
-    "Friendship",
-    "General",
-    "Horror",
-    "Humor",
-    "Hurt",
-    "Mystery",
-    "Parody",
-    "Poetry",
-    "Romance",
-    "Sci-Fi",
-    "Spiritual",
-    "Supernatural",
-    "Suspense",
-    "Tragedy",
-    "Western",
-]
 
 
 def list2text(input_list: Union[KeysView[str], List[str]]) -> str:
     if len(input_list) == 1:
         return input_list[0]
-    elif len(input_list) == 2:
+    if len(input_list) == 2:
         return " and ".join(input_list)
-    else:
-        input_list[-1] = "and " + input_list[-1]
-        return ", ".join(input_list)
-
-
-def turn_into_dictionary(input_data: List[str]) -> dict:
-    """
-    Transform a list with fic data into a dictionary.
-    """
-    if not isinstance(input_data, list):
-        raise TypeError(f"'{type(input_data)}' cannot be used here")
-    result_dictionary = {}
-    for index, data in enumerate(input_data):
-        if ":" in data:
-            temp_values = [x.strip() for x in data.split(": ")]
-            key = temp_values[0]
-            if match(r"^\d+(,\d+)*$", temp_values[1]):
-                temp_values[1] = sub(",", "", temp_values[1])
-                val = int(temp_values[1])
-            else:
-                val = temp_values[1]
-        else:
-            if data == "OC":
-                key = "Characters"
-                val = data
-            elif data == "Complete":
-                key = "Status"
-                val = data
-            else:
-                lang = iso639.find(language=data)
-                if lang:
-                    key = "Language"
-                    val = lang["name"]
-                else:
-                    key = "Characters"
-                    val = [x.strip() for x in data.split(",")]
-                    for x in data.split("/"):
-                        if x in GENRES:
-                            key = "Genres"
-                            val = data.split("/")
-                            break
-        result_dictionary[key] = val
-
-    return result_dictionary
+    input_list[-1] = "and " + input_list[-1]
+    return ", ".join(input_list)
 
 
 def get_url_from_file(file: Union[str, click.Path]) -> Union[str, None]:
@@ -111,7 +41,9 @@ def strlen(data: list) -> int:
 def clean_text(text: Union[List, Tuple, Set]) -> str:
     if not isinstance(text, (list, tuple, set)):
         raise TypeError
-    raw_text = "<p>" + " ".join(sub(r"\s+", " ", str(x).strip()) for x in text) + "</p>"
+    raw_text = (
+        "<p>" + " ".join(re.sub(r"\s+", " ", str(x).strip()) for x in text) + "</p>"
+    )
     replacement_strings = [
         (r"(</h\d>)\s*([^<])", r"\1<p>\2"),
         (r"\s*(<br/?>\s*){2,}\s*", "</p><p>"),
@@ -131,10 +63,10 @@ def clean_text(text: Union[List, Tuple, Set]) -> str:
     ]
 
     for r, s in replacement_strings:
-        raw_text = sub(r, s, raw_text)
+        raw_text = re.sub(r, s, raw_text)
 
     parsed_text = BeautifulSoup(raw_text, "html5lib")
-    for tag in parsed_text.find_all("p", string=compile(r"^(?P<a>.)(?P=a)+$")):
+    for tag in parsed_text.find_all("p", string=re.compile(r"^(?P<a>.)(?P=a)+$")):
         tag["class"] = "center"
     for tag in parsed_text.find_all("hr"):
         tag["class"] = "center"

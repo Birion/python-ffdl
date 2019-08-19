@@ -1,4 +1,4 @@
-from re import compile, match, sub
+import re
 
 import attr
 import iso639
@@ -22,28 +22,16 @@ class Header:
     reviews = attr.ib()
     hits = attr.ib()
     published = attr.ib(
-        converter=lambda x: pendulum.from_format(
-            x, "DD MMM YY", tz="UTC"
-        )
+        converter=lambda x: pendulum.from_format(x, "DD MMM YY", tz="UTC")
     )
     updated = attr.ib(
-        converter=lambda x: pendulum.from_format(
-            x, "DD MMM YY", tz="UTC"
-        )
+        converter=lambda x: pendulum.from_format(x, "DD MMM YY", tz="UTC")
     )
     complete = attr.ib(converter=lambda x: x == "Yes")
 
 
 @attr.s(auto_attribs=True)
 class TwistingTheHellmouthStory(Story):
-    chapter_select: str = attr.ib(init=False, default="select#chapnav option")
-    _story_id: str = attr.ib(init=False)
-
-    def __attrs_post_init__(self):
-        self._story_id = match(
-            r"Story-(?P<story>\d+)(-\d+)?", self.url.path.segments[0]
-        ).group("story")
-
     @staticmethod
     def get_raw_text(page: Response) -> str:
         """
@@ -55,6 +43,10 @@ class TwistingTheHellmouthStory(Story):
         empty_div.extract()
         return clean_text(div.contents)
 
+    @property
+    def select(self) -> str:
+        return "select#chapnav option"
+
     def make_title_page(self) -> None:
         """
         Parses the main page for information about the story and author.
@@ -63,10 +55,10 @@ class TwistingTheHellmouthStory(Story):
         _header = self.main_page.find(
             "div", class_="storysummary formbody defaultcolors"
         )
-        _author = self.main_page.find("a", href=compile(r"^/AuthorStories"))
+        _author = self.main_page.find("a", href=re.compile(r"^/AuthorStories"))
         _data = Header(
             *[
-                sub(r"\xa0", " ", x.text.strip())
+                re.sub(r"\xa0", " ", x.text.strip())
                 for x in _header.table.find_all("tr")[-1].find_all("td")
             ]
         )
@@ -74,7 +66,9 @@ class TwistingTheHellmouthStory(Story):
         self.metadata.title = self.main_page.find("h2").string.strip()
         if not self.metadata.chapters:
             self.metadata.chapters = [self.metadata.title]
+        # pylint:disable=assigning-non-slot
         self.metadata.author.name = _author.text
+        # pylint:disable=assigning-non-slot
         self.metadata.author.url = self.url.copy().set(path=_author["href"])
         self.metadata.complete = _data.complete
         self.metadata.rating = _data.rating
@@ -92,5 +86,8 @@ class TwistingTheHellmouthStory(Story):
         self.metadata.characters = {"couples": None, "singles": None}
 
     def make_new_chapter_url(self, url: furl, value: int) -> furl:
-        url.path.segments[0] = f"Story-{self._story_id}-{value}"
+        story_id = re.match(
+            r"Story-(?P<story>\d+)(-\d+)?", self.url.path.segments[0]
+        ).group("story")
+        url.path.segments[0] = f"Story-{story_id}-{value}"
         return url
