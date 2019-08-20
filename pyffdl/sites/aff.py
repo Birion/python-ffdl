@@ -13,11 +13,6 @@ from pyffdl.sites.story import Story
 
 @attr.s(auto_attribs=True)
 class AdultFanFictionStory(Story):
-    chapter_select: str = attr.ib(
-        init=False, default="table:nth-of-type(3) .dropdown-content a"
-    )
-    adult: bool = attr.ib(init=False, default=True)
-
     @staticmethod
     def get_raw_text(page: Response) -> str:
         """
@@ -30,23 +25,30 @@ class AdultFanFictionStory(Story):
         contents = table("tr")[5].td
 
         if contents("p"):
-            return "".join(map(str, contents("p")))
-        else:
-            contents = sub(r"<td>", "<p>", str(contents))
-            contents = sub(r"</td>", "</p>", contents)
-            contents = sub(r"<br/?>", "</p><p>", contents)
-            contents = sub(r"<p></p>", "", contents)
-            return contents
+            return "".join(str(x) for x in contents("p"))
+        replacement_strings = [("td>", "p>"), (r"<br/?>", "</p><p>"), ("<p></p>", "")]
+        for r, s in replacement_strings:
+            contents = sub(r, s, str(contents))
+        return contents
 
     @staticmethod
     def chapter_parser(value: Tag) -> str:
         return value.string.split("-")[-1]
+
+    @property
+    def is_adult(self) -> bool:
+        return True
+
+    @property
+    def select(self) -> str:
+        return ".dropdown > .dropdown-content > a"
 
     def make_title_page(self) -> None:
         """
         Parses the main page for information about the story and author.
         """
 
+        # noinspection PyTypeChecker
         def check_date(timestr: str) -> date:
             if not timestr:
                 return pendulum.from_timestamp(0, "local")
@@ -66,7 +68,7 @@ class AdultFanFictionStory(Story):
                 else:
                     return data.find_parent("tbody")("td")
 
-        _header = self.main_page("table")[2].table("td")
+        _header = self.page("table")[2].table("td")
         _author = _header[1].a
         _title = _header[0].string
         _category = _header[1]("a")[-1]["href"]
@@ -77,7 +79,9 @@ class AdultFanFictionStory(Story):
         _tags = _data[3].get_text(strip=True).split(":")[-1].split()
 
         self.metadata.title = _title
+        # pylint:disable=assigning-non-slot
         self.metadata.author.name = _author.string
+        # pylint:disable=assigning-non-slot
         self.metadata.author.url = _author["href"]
         self.metadata.summary = _data[2].get_text(strip=True)
         self.metadata.rating = _headings[1].strip().split(" : ")[-1]

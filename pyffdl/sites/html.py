@@ -1,4 +1,4 @@
-from re import match, sub
+import re
 from typing import List, Tuple
 
 import attr
@@ -23,16 +23,23 @@ class HTMLStory(Story):
         """
 
         text = BeautifulSoup(page.text, "html5lib")
-        text = sub(r"(\n|\r|\s)+", " ", str(text))
-        text = sub(r"\s*(</?p>)\s*", r"\1", text)
-        text = sub(r"<br/?>", "</p><p>", text)
-        text = sub(r"<p>\s*</p>", "", text)
+        text = str(text)
+
+        replacement_strings = [
+            (r"(\n|\r|\s)+", " "),
+            (r"\s*(</?p>)\s*", r"\1"),
+            (r"<br/?>", "</p><p>"),
+            (r"<p>\s*</p>", ""),
+        ]
+
+        for r, s in replacement_strings:
+            text = re.sub(r, s, text)
 
         return clean_text(
             [
                 x
                 for x in BeautifulSoup(text, "html5lib").find("body")("p")
-                if not match(r"^\s*<p>\s*</p>\s*$", str(x))
+                if not re.match(r"^\s*<p>\s*</p>\s*$", str(x))
             ]
         )
 
@@ -54,10 +61,12 @@ class HTMLStory(Story):
         Parses the main page for information about the story and author.
         """
         self.metadata.title = self.title
+        # pylint:disable=assigning-non-slot
         self.metadata.author.name = self.author
+        # pylint:disable=assigning-non-slot
         self.metadata.author.url = None
         self.metadata.language = "English"
-        self.url = None
+        self.url = furl(None)
 
     def make_new_chapter_url(self, url: furl, value: str) -> furl:
         return furl(value)

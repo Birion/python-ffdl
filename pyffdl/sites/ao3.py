@@ -1,4 +1,4 @@
-from re import compile, sub
+import re
 from typing import List, Tuple, Union
 
 import attr
@@ -13,9 +13,7 @@ from pyffdl.utilities.misc import clean_text
 
 @attr.s(auto_attribs=True)
 class ArchiveOfOurOwnStory(Story):
-    chapter_select: str = attr.ib(init=False, default="select#selected_id option")
-
-    def __attrs_post_init__(self):
+    def _init(self):
         if "chapters" not in self.url.path.segments:
             self.url.path.segments += ["chapters", "1"]
         if self.url.path.segments[-1] == "chapters":
@@ -30,10 +28,10 @@ class ArchiveOfOurOwnStory(Story):
         return clean_text(
             [
                 tag
-                for contents in soup.select("div.userstuff")
-                for tag in contents.children
+                for tag in soup.select_one("div.userstuff").select(
+                    "p, h1, h2, h3, h4, h5, h6, hr"
+                )
                 if isinstance(tag, Tag)
-                and tag.name != "div"
                 and tag.text != "Chapter Text"
                 and (
                     "class" not in tag.attrs
@@ -45,7 +43,11 @@ class ArchiveOfOurOwnStory(Story):
 
     @staticmethod
     def chapter_parser(value: Tag) -> Tuple[int, str]:
-        return int(value["value"]), sub(r"^\d+\.\s+", "", value.text)
+        return int(value["value"]), re.sub(r"^\d+\.\s+", "", value.text)
+
+    @property
+    def select(self) -> str:
+        return "select#selected_id option"
 
     def make_title_page(self) -> None:
         """
@@ -56,7 +58,7 @@ class ArchiveOfOurOwnStory(Story):
             cls: str, elem: str = "dd", multi: bool = True
         ) -> Union[List[str], str, None]:
             try:
-                _header = self.main_page.find("dl", class_="work meta group")
+                _header = self.page.find("dl", class_="work meta group")
                 _strings = [
                     x
                     for x in _header.find(elem, class_=cls).stripped_strings
@@ -68,17 +70,19 @@ class ArchiveOfOurOwnStory(Story):
             except AttributeError:
                 return []
 
-        _author = self.main_page.find("a", rel="author")
+        _author = self.page.find("a", rel="author")
         _chapters = find_with_class("chapters", multi=False).split("/")
         self.metadata.complete = False
         if _chapters[-1].isdigit():
             if int(_chapters[0]) == len(self.metadata.chapters):
                 self.metadata.complete = True
 
-        self.metadata.title = self.main_page.find(
+        self.metadata.title = self.page.find(
             "h2", class_="title heading"
         ).string.strip()
+        # pylint:disable=assigning-non-slot
         self.metadata.author.name = _author.string
+        # pylint:disable=assigning-non-slot
         self.metadata.author.url = self.url.copy().set(path=_author["href"])
         self.metadata.rating = find_with_class("rating", multi=False)
         self.metadata.updated = find_with_class("status", multi=False)

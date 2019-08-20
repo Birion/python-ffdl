@@ -7,19 +7,20 @@ verify_ssl = true
 pre-commit = "*"
 jupyter = "*"
 pytest = "*"
+prospector = {extras = ["with_mypy", "with_pyroma", "with_vulture"],version = "*"}
 
 [packages]
-attrs = ">=18"
+attrs = ">=19"
 beautifulsoup4 = ">=4"
 click = ">=7"
+ebooklib = ">=0.17"
 furl = ">=2"
 html5lib = ">1"
 iso639 = ">=0.1"
+mako = ">=1"
 pendulum = ">=2"
-pillow = ">=5"
+pillow = ">=6"
 requests = ">=2"
-EbookLib = ">=0.17"
-Mako = ">=1"
 
 [requires]
 python_version = "3.7"
