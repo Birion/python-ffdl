@@ -11,7 +11,7 @@ def test_list2text():
 
 
 def test_turn_into_dictionary():
-    story = FanFictionNetStory("")
+    story = FanFictionNetStory("https://www.fanfiction.net")
     with pytest.raises(TypeError):
         story.turn_into_dictionary(7)
     with pytest.raises(TypeError):

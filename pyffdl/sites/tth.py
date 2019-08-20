@@ -52,10 +52,8 @@ class TwistingTheHellmouthStory(Story):
         Parses the main page for information about the story and author.
         """
 
-        _header = self.main_page.find(
-            "div", class_="storysummary formbody defaultcolors"
-        )
-        _author = self.main_page.find("a", href=re.compile(r"^/AuthorStories"))
+        _header = self.page.find("div", class_="storysummary formbody defaultcolors")
+        _author = self.page.find("a", href=re.compile(r"^/AuthorStories"))
         _data = Header(
             *[
                 re.sub(r"\xa0", " ", x.text.strip())
@@ -63,7 +61,7 @@ class TwistingTheHellmouthStory(Story):
             ]
         )
 
-        self.metadata.title = self.main_page.find("h2").string.strip()
+        self.metadata.title = self.page.find("h2").string.strip()
         if not self.metadata.chapters:
             self.metadata.chapters = [self.metadata.title]
         # pylint:disable=assigning-non-slot
@@ -76,7 +74,7 @@ class TwistingTheHellmouthStory(Story):
         self.metadata.published = _data.published
         if self.metadata.updated == self.metadata.published:
             self.metadata.updated = None
-        self.metadata.language = iso639.to_name(self.main_page.html["lang"])
+        self.metadata.language = iso639.to_name(self.page.html["lang"])
         self.metadata.words = _data.words
         self.metadata.summary = _header.find_all("p")[-1].text
         self.metadata.genres = None

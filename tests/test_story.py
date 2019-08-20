@@ -18,7 +18,6 @@ from pyffdl.sites.story import Story
 def test_check_setup(exception, url):
     with pytest.raises(exception):
         story = Story(url)
-        story._initialise()
 
 
 def test_check_empty_setup():

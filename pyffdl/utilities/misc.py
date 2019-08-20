@@ -1,9 +1,13 @@
 import re
+import shutil
+from pathlib import Path
 from typing import KeysView, List, Set, Tuple, Union
 
 import click
 from bs4 import BeautifulSoup
 from ebooklib import epub
+
+APP = "pyffdl"
 
 
 def list2text(input_list: Union[KeysView[str], List[str]]) -> str:
@@ -42,7 +46,7 @@ def clean_text(text: Union[List, Tuple, Set]) -> str:
     if not isinstance(text, (list, tuple, set)):
         raise TypeError
     raw_text = (
-        "<p>" + " ".join(re.sub(r"\s+", " ", str(x).strip()) for x in text) + "</p>"
+            "<p>" + " ".join(re.sub(r"\s+", " ", str(x).strip()) for x in text) + "</p>"
     )
     replacement_strings = [
         (r"(</h\d>)\s*([^<])", r"\1<p>\2"),
@@ -71,3 +75,19 @@ def clean_text(text: Union[List, Tuple, Set]) -> str:
     for tag in parsed_text.find_all("hr"):
         tag["class"] = "center"
     return "".join(str(x) for x in parsed_text.body.contents)
+
+
+def ensure_data() -> Path:
+    data_folder = Path(click.get_app_dir(APP))
+    src_folder = Path(__file__).resolve().parents[1] / "data"
+
+    if not data_folder.exists():
+        data_folder.mkdir()
+
+    for section in src_folder.iterdir():
+        target = data_folder / section.name
+        if not target.exists():
+            func = shutil.copy if section.is_file() else shutil.copytree
+            func(section, target)
+
+    return data_folder

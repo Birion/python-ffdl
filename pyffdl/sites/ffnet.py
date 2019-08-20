@@ -63,7 +63,7 @@ class FanFictionNetStory(Story):
                         key = "Characters"
                         val = [x.strip() for x in data.split(",")]
                         for x in data.split("/"):
-                            genrefile = self.datasource / "genres"
+                            genrefile = self._data_folder / "genres"
                             with genrefile.open() as fp:
                                 genres = [
                                     x.strip() for x in fp.readlines() if x != "\n"
@@ -103,7 +103,7 @@ class FanFictionNetStory(Story):
                 out_singles = characters.split(", ")
             return {"couples": out_couples, "singles": out_singles}
 
-        header = self.main_page.find(id="profile_top")
+        header = self.page.find(id="profile_top")
         _author = header.find("a", href=re.compile(r"^/u/\d+/"))
         tags = [
             x.string.strip() if x.name != "span" else x["data-xutime"]
@@ -123,9 +123,7 @@ class FanFictionNetStory(Story):
         self.metadata.author.url = self.url.copy().set(path=_author["href"])
         self.metadata.summary = header.find("div", class_="xcontrast_txt").string
         self.metadata.rating = _data.get("Rated")
-        self.metadata.category = (
-            self.main_page.find(id="pre_story_links").find("a").string
-        )
+        self.metadata.category = self.page.find(id="pre_story_links").find("a").string
         self.metadata.genres = _data.get("Genres")
         self.metadata.characters = _data.get("Characters")
         self.metadata.words = _data.get("Words")

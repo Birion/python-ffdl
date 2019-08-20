@@ -16,10 +16,10 @@ from ebooklib import epub
 from ebooklib.epub import EpubBook, EpubHtml, EpubItem, EpubNav, EpubNcx, write_epub
 from furl import furl
 from mako.template import Template
-from requests import Response, Session, codes
+from requests import Response, Session
 
 from pyffdl.utilities.covers import Cover
-from pyffdl.utilities.misc import strlen
+from pyffdl.utilities.misc import ensure_data, strlen
 
 
 @attr.s
@@ -49,16 +49,9 @@ class Metadata:
     chapters: List[str] = attr.ib(init=False, factory=list)
 
 
-@attr.s(auto_attribs=True)
+@attr.s()
 class Story:
     url: furl = attr.ib(validator=attr.validators.instance_of(furl), converter=furl)
-
-    datasource: Path = attr.ib(
-        init=False, default=(Path(__file__) / ".." / ".." / "data").resolve()
-    )
-    session: Session = attr.ib(init=False, factory=Session)
-    main_page: BeautifulSoup = attr.ib(init=False)
-    book: EpubBook = attr.ib(init=False, default=None)
 
     ILLEGAL_CHARACTERS: ClassVar = r'[<>:"/\|?]'
 
@@ -68,32 +61,47 @@ class Story:
         self._force = False
         self._styles = ["style.css"]
         self._metadata = Metadata(self.url)
+        self._session = Session()
+        self._book = EpubBook()
+        self._data_folder = ensure_data()
+
+        main_page_request = self.session.get(self.url)
+        if not main_page_request.ok:
+            sysexit(1)
+        self._page = BeautifulSoup(main_page_request.content, "html5lib")
+
+        try:
+            cover = self.book.get_item_with_id("cover-img")
+            self._cover = cover.content
+        except (FileNotFoundError, AttributeError):
+            with BytesIO() as b:
+                cover = Cover.create(
+                    self.metadata.title, self.metadata.author.name, self._data_folder
+                )
+                cover.run()
+                cover.image.save(b, format="jpeg")
+                self._cover = b.getvalue()
 
         self._init()
 
     def _init(self):
         pass
 
-    def _initialise(self):
-        main_page_request = self.session.get(self.url)
-        if main_page_request.status_code != codes.ok:
-            sysexit(1)
-        self.main_page = BeautifulSoup(main_page_request.content, "html5lib")
+    def run(self):
+        self.log(f"Downloading {self.url}", force=True)
+
         try:
-            self.book = epub.read_epub(self.filename) if not self.force else None
+            self._book = epub.read_epub(self._filename) if not self.force else None
         except AttributeError:
             pass
 
-    def run(self):
-        self.log(f"Downloading {self.url}", force=True)
-        self._initialise()
         self.make_title_page()
         self.get_filename()
         self.get_chapters()
         self.make_ebook()
 
     def prepare_style(self, filename: str) -> EpubItem:
-        cssfile = self.datasource / filename
+        cssfile = self._data_folder / filename
         with cssfile.open() as fp:
             return EpubItem(
                 uid=cssfile.stem,
@@ -143,6 +151,30 @@ class Story:
     def force(self, value):
         self._force = value
 
+    @property
+    def session(self):
+        return self._session
+
+    @property
+    def page(self):
+        return self._page
+
+    @page.setter
+    def page(self, value):
+        self._page = value
+
+    @property
+    def book(self):
+        return self._book
+
+    @book.setter
+    def book(self, value):
+        self._book = value
+
+    @property
+    def cover(self):
+        return self._cover
+
     @staticmethod
     def get_raw_text(page: Response) -> str:
         """
@@ -167,7 +199,7 @@ class Story:
         """
         Gets the number of chapters and the base template for chapter URLs
         """
-        list_of_chapters = self.main_page.select(self.select)
+        list_of_chapters = self.page.select(self.select)
 
         if list_of_chapters:
             self.metadata.chapters = [
@@ -233,19 +265,6 @@ class Story:
                 chapter.add_item(s)
             yield chapter
 
-    def get_cover(self) -> bytes:
-        try:
-            cover = self.book.get_item_with_id("cover-img")
-            return cover.content
-        except (FileNotFoundError, AttributeError):
-            with BytesIO() as b:
-                cover = Cover.create(
-                    self.metadata.title, self.metadata.author.name, self.datasource
-                )
-                cover.run()
-                cover.image.save(b, format="jpeg")
-                return b.getvalue()
-
     def make_ebook(self) -> None:
         """
         Combines everything to make an ePub book.
@@ -274,10 +293,9 @@ class Story:
 
         book.toc = [x for x in self.step_through_chapters(current_chapters)]
 
-        cover = self.get_cover()
-        book.set_cover("cover.jpg", cover)
+        book.set_cover("cover.jpg", self.cover)
 
-        template = Template(filename=str(self.datasource / "title.mako"))
+        template = Template(filename=str(self._data_folder / "title.mako"))
 
         title_page = EpubHtml(
             title=self.metadata.title,

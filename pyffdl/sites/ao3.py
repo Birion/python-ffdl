@@ -58,7 +58,7 @@ class ArchiveOfOurOwnStory(Story):
             cls: str, elem: str = "dd", multi: bool = True
         ) -> Union[List[str], str, None]:
             try:
-                _header = self.main_page.find("dl", class_="work meta group")
+                _header = self.page.find("dl", class_="work meta group")
                 _strings = [
                     x
                     for x in _header.find(elem, class_=cls).stripped_strings
@@ -70,14 +70,14 @@ class ArchiveOfOurOwnStory(Story):
             except AttributeError:
                 return []
 
-        _author = self.main_page.find("a", rel="author")
+        _author = self.page.find("a", rel="author")
         _chapters = find_with_class("chapters", multi=False).split("/")
         self.metadata.complete = False
         if _chapters[-1].isdigit():
             if int(_chapters[0]) == len(self.metadata.chapters):
                 self.metadata.complete = True
 
-        self.metadata.title = self.main_page.find(
+        self.metadata.title = self.page.find(
             "h2", class_="title heading"
         ).string.strip()
         # pylint:disable=assigning-non-slot

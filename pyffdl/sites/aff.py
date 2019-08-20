@@ -68,7 +68,7 @@ class AdultFanFictionStory(Story):
                 else:
                     return data.find_parent("tbody")("td")
 
-        _header = self.main_page("table")[2].table("td")
+        _header = self.page("table")[2].table("td")
         _author = _header[1].a
         _title = _header[0].string
         _category = _header[1]("a")[-1]["href"]
