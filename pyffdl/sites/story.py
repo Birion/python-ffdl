@@ -91,8 +91,8 @@ class Story:
         self.log(f"Downloading {self.url}", force=True)
 
         try:
-            self._book = epub.read_epub(self._filename) if not self.force else None
-        except AttributeError:
+            self._book = epub.read_epub(self.filename) if not self.force else None
+        except (AttributeError, FileNotFoundError):
             pass
 
         self.make_title_page()
