@@ -191,7 +191,8 @@ class Story:
         if self.is_verbose:
             echo(text)
         if force:
-            echo(text)
+            if not self.is_verbose:
+                echo(text)
             with open("pyffdl.log", "a") as fp:
                 echo(text, file=fp)
 
@@ -203,7 +204,7 @@ class Story:
 
         if list_of_chapters:
             self.metadata.chapters = [
-                self.chapter_parser(x) for x in set(list_of_chapters)
+                self.chapter_parser(x) for x in list_of_chapters
             ]
         else:
             self.metadata.chapters = [self.metadata.title]
@@ -245,7 +246,7 @@ class Story:
             else:
                 try:
                     url_segment, title = title
-                except ValueError:
+                except (ValueError, TypeError):
                     url_segment = index
                 # pylint:disable=assignment-from-no-return
                 url = self.make_new_chapter_url(self.url.copy(), url_segment)
