@@ -64,23 +64,12 @@ class Story:
         self._session = Session()
         self._book = EpubBook()
         self._data_folder = ensure_data()
+        self._cover = None
 
         main_page_request = self.session.get(self.url)
         if not main_page_request.ok:
             sysexit(1)
         self._page = BeautifulSoup(main_page_request.content, "html5lib")
-
-        try:
-            cover = self.book.get_item_with_id("cover-img")
-            self._cover = cover.content
-        except (FileNotFoundError, AttributeError):
-            with BytesIO() as b:
-                cover = Cover.create(
-                    self.metadata.title, self.metadata.author.name, self._data_folder
-                )
-                cover.run()
-                cover.image.save(b, format="jpeg")
-                self._cover = b.getvalue()
 
         self._init()
 
@@ -96,12 +85,25 @@ class Story:
             pass
 
         self.make_title_page()
+
+        try:
+            cover = self.book.get_item_with_id("cover-img")
+            self._cover = cover.content
+        except (FileNotFoundError, AttributeError):
+            with BytesIO() as b:
+                cover = Cover.create(
+                    self.metadata.title, self.metadata.author.name, self.data
+                )
+                cover.run()
+                cover.image.save(b, format="jpeg")
+                self._cover = b.getvalue()
+
         self.get_filename()
         self.get_chapters()
         self.make_ebook()
 
     def prepare_style(self, filename: str) -> EpubItem:
-        cssfile = self._data_folder / filename
+        cssfile = self.data / filename
         with cssfile.open() as fp:
             return EpubItem(
                 uid=cssfile.stem,
@@ -174,6 +176,10 @@ class Story:
     @property
     def cover(self):
         return self._cover
+
+    @property
+    def data(self):
+        return self._data_folder
 
     @staticmethod
     def get_raw_text(page: Response) -> str:
@@ -296,7 +302,7 @@ class Story:
 
         book.set_cover("cover.jpg", self.cover)
 
-        template = Template(filename=str(self._data_folder / "title.mako"))
+        template = Template(filename=str(self.data / "title.mako"))
 
         title_page = EpubHtml(
             title=self.metadata.title,

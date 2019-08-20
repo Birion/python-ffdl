@@ -63,7 +63,7 @@ class FanFictionNetStory(Story):
                         key = "Characters"
                         val = [x.strip() for x in data.split(",")]
                         for x in data.split("/"):
-                            genrefile = self._data_folder / "genres"
+                            genrefile = self.data / "genres"
                             with genrefile.open() as fp:
                                 genres = [
                                     x.strip() for x in fp.readlines() if x != "\n"
