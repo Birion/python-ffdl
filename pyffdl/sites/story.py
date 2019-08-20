@@ -1,7 +1,6 @@
 import re
 from datetime import date, datetime
 from io import BytesIO
-from pathlib import Path
 from sys import exit as sysexit
 from typing import ClassVar, Iterator, List, Tuple, Union
 from uuid import uuid4
@@ -209,9 +208,7 @@ class Story:
         list_of_chapters = self.page.select(self.select)
 
         if list_of_chapters:
-            self.metadata.chapters = [
-                self.chapter_parser(x) for x in list_of_chapters
-            ]
+            self.metadata.chapters = [self.chapter_parser(x) for x in list_of_chapters]
         else:
             self.metadata.chapters = [self.metadata.title]
 
