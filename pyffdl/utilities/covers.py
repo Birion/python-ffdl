@@ -1,3 +1,4 @@
+import hashlib
 import random
 import re
 from pathlib import Path
@@ -23,19 +24,13 @@ class Cover:
     font_file: Path = attr.ib()
     text: str = attr.ib()
 
-    image: Image = attr.ib(init=False)
-    _font: ImageFont = attr.ib(init=False)
-    _title: Title = attr.ib(init=False)
-    _width: int = attr.ib(init=False)
-    _height: int = attr.ib(init=False)
-
     ENHANCERS = [ImageEnhance.Color, ImageEnhance.Sharpness]
 
     def __attrs_post_init__(self):
-        self.image = Image.open(self.image_file)
+        self._image = Image.open(self.image_file)
         self._font = ImageFont.truetype(str(self.font_file), 40)
         self._title = Title.from_text(self.text, self._font)
-        self._width, self._height = self.image.size
+        self._width, self._height = self._image.size
 
     def run(self):
         if random.randint(0, 10) % 2:
@@ -46,8 +41,15 @@ class Cover:
     def create(
         cls, title: str, author: str, directory: Path, font: str = "Cormorant-Bold.ttf"
     ):
-        cover = random.choice(sorted((directory / "covers").glob("*.jpg")))
-        fontfile = directory / "font" / font
+        covers = [x for x in (directory / "covers").glob("*.jpg")]
+
+        text = f"{author} - {title}"
+
+        title_hash = hashlib.md5(text.encode()).hexdigest()
+        cover_idx = int(title_hash, base=16) % len(covers)
+        cover = covers[cover_idx]
+
+        font_file = directory / "font" / font
 
         if len(title) > 30:
             words = re.split(r"\s+", title)
@@ -59,8 +61,41 @@ class Cover:
             rows = [x.strip() for x in rows]
             title = "\n".join(rows)
 
-        text = "\n-\n".join((title, author))
-        return cls(cover, fontfile, text)
+        text = f"{author}\n-\n{title}"
+
+        return cls(cover, font_file, text)
+
+    @property
+    def image(self):
+        return self._image
+
+    @image.setter
+    def image(self, value):
+        self._image = value
+
+    @property
+    def width(self):
+        return self._width
+
+    @width.setter
+    def width(self, value):
+        self._width = value
+
+    @property
+    def height(self):
+        return self._height
+
+    @height.setter
+    def height(self, value):
+        self._height = value
+
+    @property
+    def font(self):
+        return self._font
+
+    @property
+    def title(self):
+        return self._title
 
     def _enhance(self) -> Image:
         enhancer = random.choice(self.ENHANCERS)(self.image)
@@ -71,19 +106,19 @@ class Cover:
         fill = "white"
         shadow = "black"
 
-        _x = (self._width - self._title.width) / 2
-        _y = (self._height - self._title.height) / 2
+        _x = (self.width - self.title.width) / 2
+        _y = (self.height - self.title.height) / 2
 
         for x in range(-offset, offset + 1):
             for y in range(-offset, offset + 1):
                 draw.multiline_text(
                     (_x - x, _y - y),
-                    self._title.text,
+                    self.title.text,
                     font=self._font,
                     fill=shadow,
                     align="center",
                 )
 
         draw.multiline_text(
-            (_x, _y), self._title.text, font=self._font, fill=fill, align="center"
+            (_x, _y), self.title.text, font=self.font, fill=fill, align="center"
         )
