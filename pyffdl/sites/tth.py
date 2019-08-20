@@ -3,7 +3,7 @@ import re
 import attr
 import iso639
 import pendulum
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from furl import furl
 from requests import Response
 
@@ -42,6 +42,10 @@ class TwistingTheHellmouthStory(Story):
         empty_div = div.find("div", style="clear:both;")
         empty_div.extract()
         return clean_text(div.contents)
+
+    @staticmethod
+    def chapter_parser(value: Tag) -> str:
+        return re.sub(r"\d+\.\s+", "", value.text)
 
     @property
     def select(self) -> str:
