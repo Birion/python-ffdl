@@ -39,7 +39,7 @@ class Cover:
 
     @classmethod
     def create(
-        cls, title: str, author: str, directory: Path, font: str = "Cormorant-Bold.ttf"
+        cls, title: str, author: str, directory: Path, font: str = "Junction-bold.otf"
     ):
         covers = [x for x in (directory / "covers").glob("*.jpg")]
 
@@ -51,11 +51,13 @@ class Cover:
 
         font_file = directory / "font" / font
 
-        if len(title) > 30:
+        max_width = 20
+
+        if len(title) > max_width:
             words = re.split(r"\s+", title)
             rows = [""]
             for word in words:
-                if len(rows[-1]) >= (30 + len(word)):
+                if len(rows[-1]) >= (max_width + len(word)):
                     rows.append("")
                 rows[-1] += f" {word}"
             rows = [x.strip() for x in rows]
