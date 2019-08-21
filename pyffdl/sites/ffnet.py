@@ -114,6 +114,8 @@ class FanFictionNetStory(Story):
         )
 
         if "Characters" in _data.keys():
+            if isinstance(_data["Characters"], str):
+                _data["Characters"] = [_data["Characters"]]
             _data["Characters"] = parse_characters(", ".join(_data["Characters"]))
 
         self.metadata.title = header.find("b").string
