@@ -24,18 +24,22 @@ h3 {
   text-align: center;
   font-variant: small-caps;
 }
-h1 + p,
+h1 + p, h1 + img + p,
 h2 + p,
-h3 + p {
+h2 + img + p,
+h3 + p,
+h3 + img + p {
   text-indent: 0;
 }
 
 hr,
+img,
 .header,
 .center {
   text-align: center;
 }
 hr + p,
+img + p,
 .header + p,
 .center + p {
   text-indent: 0;

@@ -84,6 +84,38 @@ def ensure_data() -> Path:
     if not data_folder.exists():
         data_folder.mkdir()
 
+    genres = [
+        "Adventure",
+        "Angst",
+        "Comfort",
+        "Crime",
+        "Drama",
+        "Family",
+        "Fantasy",
+        "Friendship",
+        "General",
+        "Horror",
+        "Humor",
+        "Hurt",
+        "Mystery",
+        "Parody",
+        "Poetry",
+        "Romance",
+        "Sci - Fi",
+        "Spiritual",
+        "Supernatural",
+        "Suspense",
+        "Tragedy",
+        "Western",
+    ]
+
+    genre_file = data_folder / "genres"
+    if not genre_file.exists():
+        with genre_file.open("w") as fp:
+            for genre in genres:
+                fp.write(genre)
+                fp.write("\n")
+
     for section in src_folder.iterdir():
         target = data_folder / section.name
         if not target.exists():
