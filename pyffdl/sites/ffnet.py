@@ -1,26 +1,124 @@
 import re
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Tuple, Optional
 
 import attr
-import iso639
-import pendulum
-from bs4 import BeautifulSoup, Tag
-from furl import furl
-from pendulum import DateTime
+import iso639  # type: ignore
+import pendulum  # type: ignore
+from bs4 import BeautifulSoup, Tag  # type: ignore
+from furl import furl  # type: ignore
 from requests import Response
 
 from pyffdl.sites.story import Story
-from pyffdl.utilities.misc import clean_text
+from pyffdl.utilities.misc import clean_text, split
+
+Couple = List[str]
+Characters = Dict[str, Union[List[str], List[Couple]]]
+Genres = List[str]
+ParseResult = Tuple[str, Union[str, int, Genres, Characters]]
+
+
+def turn_into_dictionary(  # noqa: MC0001
+    input_data: List[str]
+) -> Dict[str, Union[str, int, Genres, Characters]]:
+    """Transform a list with fic data into a dictionary."""  # noqa: D202
+
+    def parse_data(datum: List[str]) -> Optional[ParseResult]:
+        val: Optional[str]
+        key, *_ = datum
+        val = _[0] if _ else None
+
+        keys = [
+            "Rated",
+            "Language",
+            "Genres",
+            "Characters",
+            "Words",
+            "Published",
+            "Updated",
+            "Status",
+        ]
+        genres = [
+            "Adventure",
+            "Angst",
+            "Comfort",
+            "Crime",
+            "Drama",
+            "Family",
+            "Fantasy",
+            "Friendship",
+            "General",
+            "Horror",
+            "Humor",
+            "Hurt",
+            "Mystery",
+            "Parody",
+            "Poetry",
+            "Romance",
+            "Sci - Fi",
+            "Spiritual",
+            "Supernatural",
+            "Suspense",
+            "Tragedy",
+            "Western",
+        ]
+
+        if val:
+            if key in keys:
+                try:
+                    return key, int(val.replace(",", ""))
+                except ValueError:
+                    return key, val
+            return None
+
+        val = key
+
+        lang = iso639.find(language=val)
+        if lang:
+            return "Language", lang["name"]
+
+        tmp = split(val, "/")
+        for x in tmp:
+            if x in genres:
+                return "Genres", tmp
+
+        def parse_characters(chars: str) -> Characters:
+            out_couples = []
+            out_singles: List[str] = []
+            couples = re.compile(r"\[([^\[]+)\]")
+            character_couples = couples.findall(chars)
+
+            if character_couples:
+                for couple in character_couples:
+                    out_couples.append(split(couple))
+                    chars = chars.replace(couple, "")
+            if chars:
+                chars = re.sub(r"[\[\]]", "", chars)
+                out_singles = [s for s in split(chars) if s and s != " "]
+            return {"couples": out_couples, "singles": out_singles}
+
+        characters = ", ".join(split(val))
+
+        return "Characters", parse_characters(characters)
+
+    if not isinstance(input_data, list):
+        raise TypeError(f"'{type(input_data)}' cannot be used here")
+
+    data = [split(x, ":") for x in input_data]
+
+    result_dictionary = {
+        key: val
+        for key, val in [parse_data(x) for x in data if parse_data(x)]  # type: ignore
+    }
+
+    return result_dictionary
 
 
 @attr.s(auto_attribs=True)
 class FanFictionNetStory(Story):
     @staticmethod
-    def get_raw_text(page: Response) -> str:
-        """
-        Returns only the text of the chapter
-        """
-        soup = BeautifulSoup(page.content, "html5lib").select_one("div#storytext")
+    def get_raw_text(response: Response) -> str:
+        """Returns only the text of the chapter."""
+        soup = BeautifulSoup(response.content, "html5lib").select_one("div#storytext")
         return clean_text(soup.contents)
 
     @property
@@ -31,77 +129,12 @@ class FanFictionNetStory(Story):
     def chapter_parser(value: Tag) -> str:
         return re.sub(r"\d+\.\s+", "", value.text)
 
-    def turn_into_dictionary(self, input_data: List[str]) -> dict:
-        """
-        Transform a list with fic data into a dictionary.
-        """
-        if not isinstance(input_data, list):
-            raise TypeError(f"'{type(input_data)}' cannot be used here")
-        result_dictionary = {}
-        for data in input_data:
-            if ":" in data:
-                temp_values = [x.strip() for x in data.split(": ")]
-                key = temp_values[0]
-                if re.match(r"^\d+(,\d+)*$", temp_values[1]):
-                    temp_values[1] = re.sub(",", "", temp_values[1])
-                    val = int(temp_values[1])
-                else:
-                    val = temp_values[1]
-            else:
-                if data == "OC":
-                    key = "Characters"
-                    val = data
-                elif data == "Complete":
-                    key = "Status"
-                    val = data
-                else:
-                    lang = iso639.find(language=data)
-                    if lang:
-                        key = "Language"
-                        val = lang["name"]
-                    else:
-                        key = "Characters"
-                        val = [x.strip() for x in data.split(",")]
-                        for x in data.split("/"):
-                            genrefile = self.data / "genres"
-                            with genrefile.open() as fp:
-                                genres = [
-                                    x.strip() for x in fp.readlines() if x != "\n"
-                                ]
-                            if x in genres:
-                                key = "Genres"
-                                val = data.split("/")
-                                break
-            result_dictionary[key] = val
-
-        return result_dictionary
-
     def make_title_page(self) -> None:
-        """
-        Parses the main page for information about the story and author.
-        """
+        """Parses the main page for information about the story and author."""  # noqa: D202
 
-        def check_date(data: Dict[str, Union[str, int]], key: str) -> DateTime:
-            timestamp = data.get(key)
+        def check_date(timestamp: int) -> pendulum.DateTime:
             # noinspection PyTypeChecker
             return pendulum.from_timestamp(timestamp, "UTC") if timestamp else None
-
-        def parse_characters(characters: str) -> Dict[str, List[str]]:
-            out_couples = []
-            out_singles = []
-            couples = re.compile(r"\[[^[]+\]")
-            character_couples = [x for x in couples.finditer(characters)]
-
-            if character_couples:
-                num_couples = len(character_couples)
-                for couple in character_couples:
-                    out_couples.append(couple.group()[1:-1].split(", "))
-                for i in range(-1, -num_couples - 1, -1):
-                    match = character_couples[i]
-                    characters = characters.replace(match.group(), "").strip()
-            if characters:
-                out_singles = characters.split(", ")
-            return {"couples": out_couples, "singles": out_singles}
 
         header = self.page.find(id="profile_top")
         _author = header.find("a", href=re.compile(r"^/u/\d+/"))
@@ -109,14 +142,7 @@ class FanFictionNetStory(Story):
             x.string.strip() if x.name != "span" else x["data-xutime"]
             for x in header.find(class_="xgray").children
         ]
-        _data = self.turn_into_dictionary(
-            re.sub(r"\s+", " ", " ".join(tags)).split(" - ")
-        )
-
-        if "Characters" in _data.keys():
-            if isinstance(_data["Characters"], str):
-                _data["Characters"] = [_data["Characters"]]
-            _data["Characters"] = parse_characters(", ".join(_data["Characters"]))
+        _data = turn_into_dictionary(split(" ".join(tags), "-"))
 
         self.metadata.title = header.find("b").string
         # pylint:disable=assigning-non-slot
@@ -129,11 +155,13 @@ class FanFictionNetStory(Story):
         self.metadata.genres = _data.get("Genres")
         self.metadata.characters = _data.get("Characters")
         self.metadata.words = _data.get("Words")
-        self.metadata.published = check_date(_data, "Published")
-        self.metadata.updated = check_date(_data, "Updated")
+        # noinspection PyTypeHints
+        self.metadata.published = check_date(_data.get("Published"))  # type: ignore
+        # noinspection PyTypeHints
+        self.metadata.updated = check_date(_data.get("Updated"))  # type: ignore
         self.metadata.language = _data.get("Language")
         self.metadata.complete = _data.get("Status")
 
-    def make_new_chapter_url(self, url: furl, value: int) -> furl:
+    def make_new_chapter_url(self, url: furl, value: str) -> furl:
         url.path.segments[-2] = value
         return url

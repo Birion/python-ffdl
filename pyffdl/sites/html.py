@@ -1,9 +1,9 @@
 import re
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import attr
-from bs4 import BeautifulSoup
-from furl import furl
+from bs4 import BeautifulSoup  # type: ignore
+from furl import furl  # type: ignore
 from requests import Response
 
 from pyffdl.sites.story import Story
@@ -17,12 +17,9 @@ class HTMLStory(Story):
     title: str
 
     @staticmethod
-    def get_raw_text(page: Response) -> str:
-        """
-        Returns only the text of the chapter
-        """
-
-        text = BeautifulSoup(page.text, "html5lib")
+    def get_raw_text(response: Response) -> str:
+        """Returns only the text of the chapter."""
+        text = BeautifulSoup(response.text, "html5lib")
         text = str(text)
 
         replacement_strings = [
@@ -44,9 +41,7 @@ class HTMLStory(Story):
         )
 
     def get_chapters(self) -> None:
-        """
-        Gets the number of chapters and the base template for chapter URLs
-        """
+        """Gets the number of chapters and the base template for chapter URLs."""  # noqa: D202
 
         def _parse_url(url: str) -> Tuple[furl, str]:
             _url = furl(url)
@@ -57,9 +52,7 @@ class HTMLStory(Story):
         self.metadata.chapters = [_parse_url(x) for x in self.chapters]
 
     def make_title_page(self) -> None:
-        """
-        Parses the main page for information about the story and author.
-        """
+        """Parses the main page for information about the story and author."""
         self.metadata.title = self.title
         # pylint:disable=assigning-non-slot
         self.metadata.author.name = self.author
@@ -68,5 +61,5 @@ class HTMLStory(Story):
         self.metadata.language = "English"
         self.url = furl(None)
 
-    def make_new_chapter_url(self, url: furl, value: str) -> furl:
+    def make_new_chapter_url(self, url: furl, value: str) -> Optional[furl]:
         return furl(value)

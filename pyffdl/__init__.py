@@ -1,1 +1,1 @@
-from pyffdl.core.app import cli  # noqa: F401
+from pyffdl.core import cli  # noqa: F401

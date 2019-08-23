@@ -3,9 +3,9 @@ from datetime import date
 from re import sub
 
 import attr
-import pendulum
-from bs4 import BeautifulSoup, Tag
-from furl import furl
+import pendulum  # type: ignore
+from bs4 import BeautifulSoup, Tag  # type: ignore
+from furl import furl  # type: ignore
 from requests import Response, get
 
 from pyffdl.sites.story import Story
@@ -14,12 +14,9 @@ from pyffdl.sites.story import Story
 @attr.s(auto_attribs=True)
 class AdultFanFictionStory(Story):
     @staticmethod
-    def get_raw_text(page: Response) -> str:
-        """
-        Returns only the text of the chapter
-        """
-
-        page = BeautifulSoup(sub(r"<p></p>", "</p><p>", page.text), "html5lib")
+    def get_raw_text(response: Response) -> str:
+        """Returns only the text of the chapter."""
+        page = BeautifulSoup(sub(r"<p></p>", "</p><p>", response.text), "html5lib")
 
         table = page("table")[2]
         contents = table("tr")[5].td
@@ -44,9 +41,7 @@ class AdultFanFictionStory(Story):
         return ".dropdown > .dropdown-content > a"
 
     def make_title_page(self) -> None:
-        """
-        Parses the main page for information about the story and author.
-        """
+        """Parses the main page for information about the story and author."""  # noqa: D202
 
         # noinspection PyTypeChecker
         def check_date(timestr: str) -> date:
@@ -94,6 +89,6 @@ class AdultFanFictionStory(Story):
         self.metadata.complete = "COMPLETE" in _tags or "Oneshot" in _tags
         self.metadata.tags = _tags
 
-    def make_new_chapter_url(self, url: furl, value: int) -> furl:
+    def make_new_chapter_url(self, url: furl, value: str) -> furl:
         url.args["chapter"] = value
         return url

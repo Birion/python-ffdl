@@ -1,16 +1,17 @@
 import re
 import shutil
 from pathlib import Path
-from typing import KeysView, List, Set, Tuple, Union
+from typing import List, Optional, Set, Tuple, Union
 
 import click
-from bs4 import BeautifulSoup
-from ebooklib import epub
+from bs4 import BeautifulSoup  # type: ignore
+from ebooklib import epub  # type: ignore
+from furl import furl  # type: ignore
 
 APP = "pyffdl"
 
 
-def list2text(input_list: Union[KeysView[str], List[str]]) -> str:
+def list2text(input_list: List[str]) -> str:
     if len(input_list) == 1:
         return input_list[0]
     if len(input_list) == 2:
@@ -19,7 +20,7 @@ def list2text(input_list: Union[KeysView[str], List[str]]) -> str:
     return ", ".join(input_list)
 
 
-def get_url_from_file(file: Union[str, click.Path]) -> Union[str, None]:
+def get_url_from_file(file: Union[str, click.Path]) -> Optional[furl]:
     book = epub.read_epub(file)
     title_page = book.get_item_with_id("title")
     if not title_page:  # if we're checking old-format ebook
@@ -29,7 +30,7 @@ def get_url_from_file(file: Union[str, click.Path]) -> Union[str, None]:
         url = parsed_text.find(id="story-url")
         if not url:
             url = parsed_text
-        return url("a")[0]["href"]
+        return furl(url("a")[0]["href"])
     except AttributeError:
         error = f"File {file} doesn't contain requested information."
         with open("pyffdl.log", "a") as fp:
@@ -84,42 +85,16 @@ def ensure_data() -> Path:
     if not data_folder.exists():
         data_folder.mkdir()
 
-    genres = [
-        "Adventure",
-        "Angst",
-        "Comfort",
-        "Crime",
-        "Drama",
-        "Family",
-        "Fantasy",
-        "Friendship",
-        "General",
-        "Horror",
-        "Humor",
-        "Hurt",
-        "Mystery",
-        "Parody",
-        "Poetry",
-        "Romance",
-        "Sci - Fi",
-        "Spiritual",
-        "Supernatural",
-        "Suspense",
-        "Tragedy",
-        "Western",
-    ]
-
-    genre_file = data_folder / "genres"
-    if not genre_file.exists():
-        with genre_file.open("w") as fp:
-            for genre in genres:
-                fp.write(genre)
-                fp.write("\n")
-
     for section in src_folder.iterdir():
         target = data_folder / section.name
         if not target.exists():
-            func = shutil.copy if section.is_file() else shutil.copytree
-            func(section, target)
+            if section.is_file():
+                shutil.copy(section, target)
+            else:
+                shutil.copytree(section, target)
 
     return data_folder
+
+
+def split(text: str, sep: str = ",") -> List[str]:
+    return re.split(rf"\s*{sep}\s*", text)
