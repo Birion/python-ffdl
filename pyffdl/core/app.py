@@ -1,8 +1,9 @@
 import shutil
-from typing import List, Tuple, Union
+from typing import List, Tuple, Optional
 
+import attr
 import click
-from furl import furl
+from furl import furl  # type: ignore
 
 from pyffdl.__version__ import __version__
 from pyffdl.sites import (
@@ -23,32 +24,37 @@ AVAILABLE_SITES = {
 }
 
 
-def download(
-    urls: List[Tuple[str, Union[str, None]]], verbose: bool = False, force: bool = False
-) -> None:
-    for address, filename in urls:
-        if not address:
+@attr.s()
+class URL:
+    url: furl = attr.ib()
+    file: Optional[str] = attr.ib(default=None)
+
+
+def download(urls: List[URL], verbose: bool = False, force: bool = False) -> None:
+    for url in urls:
+        if not url.url:
             continue
         try:
-            host = ".".join(furl(address).host.split(".")[-2:])
+            host = ".".join(url.url.host.split(".")[-2:])
             try:
                 Story = AVAILABLE_SITES[host]
-                story = Story(furl(address))
-                story.verbose = verbose
+                story = Story(url.url)
+                story.is_verbose = verbose
                 story.force = force
-                if filename:
-                    story.filename = filename
+                if url.file:
+                    story.filename = url.file
                 story.run()
             except KeyError:
                 click.echo(
-                    f"{__file__} is currently only able to download from {list2text(AVAILABLE_SITES.keys())}."
+                    f"{__file__} is currently only able to download from {list2text(list(AVAILABLE_SITES.keys()))}."
                 )
         except AttributeError as e:
-            print(e)
-            error = "There were problems with parsing the URL."
-            with open("pyffdl.log", "a") as fp:
-                click.echo(error, file=fp)
-            click.echo(error, err=True)
+            raise e
+            # print(e)
+            # error = "There were problems with parsing the URL."
+            # with open("pyffdl.log", "a") as fp:
+            #     click.echo(error, file=fp)
+            # click.echo(error, err=True)
 
 
 @click.group()
@@ -57,7 +63,9 @@ def cli() -> None:
     pass
 
 
-@cli.command("download", help="Download a new fanfiction story.")
+@cli.command(  # noqa: unused-function
+    "download", help="Download a new fanfiction story."
+)
 @click.option(
     "-f",
     "--from",
@@ -70,13 +78,17 @@ def cli() -> None:
 def cli_download(
     from_file: click.File, url_list: Tuple[str, ...], verbose: bool = False
 ) -> None:
-    urls = [(x, None) for x in url_list]
+    urls = [URL(furl(x)) for x in url_list]
     if from_file:
-        urls += [(x.strip("\n"), None) for x in from_file.readlines()]
+        urls += [
+            URL(furl(x.strip("\n"))) for x in from_file.readlines()  # type: ignore
+        ]
     download(urls, verbose)
 
 
-@cli.command("simple", help="Download a single story, using a list of chapter URLs.")
+@cli.command(  # noqa: unused-function
+    "simple", help="Download a single story, using a list of chapter URLs."
+)
 @click.option(
     "-f",
     "--from",
@@ -95,23 +107,27 @@ def cli_simple(
     url_list: Tuple[str, ...],
     verbose: bool = False,
 ):
-    urls = [x for x in url_list]
+    urls = [URL(furl(x)) for x in url_list]
     if from_file:
-        urls += [x.strip("\n") for x in from_file.readlines()]
+        urls += [
+            URL(furl(x.strip("\n"))) for x in from_file.readlines()  # type: ignore
+        ]
     if not urls:
         click.echo("You must provide at least one URL to download.")
         return
     story = HTMLStory(
-        chapters=urls,
+        chapters=[x.url.tostr() for x in urls],
         author=author,
         title=title,
         url=furl("http://httpbin.org/status/200"),
     )
-    story.verbose = verbose
+    story.is_verbose = verbose
     story.run()
 
 
-@cli.command("update", help="Update an existing .epub fanfiction file.")
+@cli.command(  # noqa: unused-function
+    "update", help="Update an existing .epub fanfiction file."
+)
 @click.option(
     "-f",
     "--force",
@@ -130,5 +146,7 @@ def cli_update(
     if backup:
         for filename in filenames:
             shutil.copy(f"{filename}", f"{filename}.bck")
-    stories = [(get_url_from_file(x), str(x) if not force else None) for x in filenames]
+    stories = [
+        URL(get_url_from_file(x), str(x) if not force else None) for x in filenames
+    ]
     download(stories, verbose, force)

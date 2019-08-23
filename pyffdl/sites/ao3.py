@@ -1,10 +1,10 @@
 import re
-from typing import List, Tuple, Union
+from typing import List, Optional, Tuple, Union, Any
 
 import attr
-import pendulum
-from bs4 import BeautifulSoup, Tag
-from furl import furl
+import pendulum  # type: ignore
+from bs4 import BeautifulSoup, Tag  # type: ignore
+from furl import furl  # type: ignore
 from requests import Response
 
 from pyffdl.sites.story import Story
@@ -20,11 +20,9 @@ class ArchiveOfOurOwnStory(Story):
             self.url.path.segments += ["1"]
 
     @staticmethod
-    def get_raw_text(page: Response) -> str:
-        """
-        Returns only the text of the chapter
-        """
-        soup = BeautifulSoup(page.content, "html5lib")
+    def get_raw_text(response: Response) -> str:
+        """Returns only the text of the chapter."""
+        soup = BeautifulSoup(response.content, "html5lib")
         return clean_text(
             [
                 tag
@@ -50,28 +48,35 @@ class ArchiveOfOurOwnStory(Story):
         return "select#selected_id option"
 
     def make_title_page(self) -> None:
-        """
-        Parses the main page for information about the story and author.
-        """
+        """Parses the main page for information about the story and author."""  # noqa: D202
 
-        def find_with_class(
-            cls: str, elem: str = "dd", multi: bool = True
-        ) -> Union[List[str], str, None]:
-            try:
-                _header = self.page.find("dl", class_="work meta group")
-                _strings = [
-                    x
-                    for x in _header.find(elem, class_=cls).stripped_strings
-                    if x != ""
-                ]
-                if multi:
-                    return _strings
-                return _strings[0] if _strings else None
-            except AttributeError:
+        def get_strings(cls: str) -> List[str]:
+            result = _header.find("dd", class_=cls)
+            if not result:
                 return []
+            return [x for x in result.stripped_strings if x != ""]
+
+        def find_class_multiple(cls: str) -> List[str]:
+            return get_strings(cls)
+
+        def find_class_single(cls: str) -> Union[str, None]:
+            _strings = get_strings(cls)
+            return _strings[0] if _strings else None
+
+        def check_time(cls: str) -> Optional[pendulum.DateTime]:
+            timestamp = find_class_single(cls) if _header else None
+            if timestamp:
+                return pendulum.parse(timestamp)
+            return None
+
+        _header = self.page.find("dl", class_="work meta group")
 
         _author = self.page.find("a", rel="author")
-        _chapters = find_with_class("chapters", multi=False).split("/")
+        _chapters = (
+            find_class_single("chapters").split("/")  # type: ignore
+            if _header and find_class_single("chapters")
+            else []
+        )
         self.metadata.complete = False
         if _chapters[-1].isdigit():
             if int(_chapters[0]) == len(self.metadata.chapters):
@@ -84,26 +89,26 @@ class ArchiveOfOurOwnStory(Story):
         self.metadata.author.name = _author.string
         # pylint:disable=assigning-non-slot
         self.metadata.author.url = self.url.copy().set(path=_author["href"])
-        self.metadata.rating = find_with_class("rating", multi=False)
-        self.metadata.updated = find_with_class("status", multi=False)
-        self.metadata.published = pendulum.parse(
-            find_with_class("published", multi=False)
-        )
-        if self.metadata.updated:
-            self.metadata.updated = pendulum.parse(self.metadata.updated)
+        self.metadata.rating = find_class_single("rating") if _header else None
+        self.metadata.updated = check_time("status")
+        self.metadata.published = check_time("published")
         if self.metadata.updated == self.metadata.published:
             self.metadata.updated = None
-        self.metadata.language = find_with_class("language", multi=False)
-        self.metadata.words = int(find_with_class("words", multi=False))
-        self.metadata.summary = None
-        self.metadata.genres = None
-        self.metadata.category = ", ".join(find_with_class("fandom"))
-        self.metadata.tags = find_with_class("freeform")
+        self.metadata.language = find_class_single("language") if _header else None
+        self.metadata.words = (
+            int(find_class_single("words"))  # type: ignore
+            if _header and find_class_single("words")
+            else 0
+        )
+        self.metadata.category = (
+            ", ".join(find_class_multiple("fandom")) if _header else None
+        )
+        self.metadata.tags = find_class_multiple("freeform") if _header else []
 
-        characters = find_with_class("character")
-        try:
-            couples = [x.split("/") for x in find_with_class("relationship")]
-        except AttributeError:
+        characters = find_class_multiple("character") if _header else []
+        if characters:
+            couples = [x.split("/") for x in find_class_multiple("relationship")]
+        else:
             couples = []
         _not_singles = {character for couple in couples for character in couple}
 
@@ -114,6 +119,10 @@ class ArchiveOfOurOwnStory(Story):
             ],
         }
 
-    def make_new_chapter_url(self, url: furl, value: int) -> furl:
+    def make_new_chapter_url(self, url: furl, value: str) -> furl:
         url.path.segments[-1] = value
         return url
+
+    @staticmethod
+    def chapter_cleanup(chapters: List[Any]) -> List[str]:
+        return [x[1] for x in chapters]

@@ -9,8 +9,8 @@ furl==2.0.0
 html5lib==1.0.1
 idna==2.8
 iso639==0.1.4
+jinja2==2.10.1
 lxml==4.4.1
-mako==1.1.0
 markupsafe==1.1.1
 orderedmultidict==1.0.1
 pendulum==2.0.5

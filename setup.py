@@ -17,7 +17,7 @@ DESCRIPTION = "Fanfiction download script"
 URL = "https://github.com/Birion/python-ffdl"
 EMAIL = "ondrej.vagner@gmail.com"
 AUTHOR = "Birion"
-REQUIRES_PYTHON = ">=3.7"
+REQUIRES_PYTHON = ">=3.6"
 VERSION = None
 
 # What packages are required for this module to be executed?
@@ -29,7 +29,7 @@ REQUIRED = [
     "furl>=2",
     "html5lib>=1",
     "iso639>=0.1",
-    "mako>=1",
+    "jinja2>=2",
     "pendulum>=2",
     "pillow>=5",
     "requests>=2",
@@ -112,13 +112,17 @@ setup(
     dependency_links=DEPENDENCY,
     include_package_data=True,
     license="MIT",
+    keywords="fanfiction downloader",
     classifiers=[
         # Trove classifiers
         # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: End Users/Desktop",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: Implementation :: CPython",
     ],
     # $ setup.py publish support.

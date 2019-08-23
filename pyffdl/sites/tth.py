@@ -1,14 +1,27 @@
 import re
+from typing import Optional
 
 import attr
-import iso639
-import pendulum
-from bs4 import BeautifulSoup, Tag
-from furl import furl
+import iso639  # type: ignore
+import pendulum  # type: ignore
+from bs4 import BeautifulSoup, Tag  # type: ignore
+from furl import furl  # type: ignore
 from requests import Response
 
 from pyffdl.sites.story import Story
 from pyffdl.utilities.misc import clean_text
+
+
+def number_cleanup(count: str) -> int:
+    return int(count.replace(",", ""))
+
+
+def date_cleanup(date: str) -> pendulum.DateTime:
+    return pendulum.from_format(date, "DD MMM YY", tz="UTC")
+
+
+def completion_check(status: str) -> bool:
+    return status == "Yes"
 
 
 @attr.s
@@ -17,27 +30,21 @@ class Header:
     author = attr.ib()
     rating = attr.ib()
     chapters = attr.ib(converter=int)
-    words = attr.ib(converter=lambda x: int(x.replace(",", "")))
-    recs = attr.ib()
-    reviews = attr.ib()
-    hits = attr.ib()
-    published = attr.ib(
-        converter=lambda x: pendulum.from_format(x, "DD MMM YY", tz="UTC")
-    )
-    updated = attr.ib(
-        converter=lambda x: pendulum.from_format(x, "DD MMM YY", tz="UTC")
-    )
-    complete = attr.ib(converter=lambda x: x == "Yes")
+    words = attr.ib(converter=number_cleanup)
+    recs = attr.ib()  # noqa: unused-variable
+    reviews = attr.ib()  # noqa: unused-variable
+    hits = attr.ib()  # noqa: unused-variable
+    published = attr.ib(converter=date_cleanup)
+    updated = attr.ib(converter=date_cleanup)
+    complete = attr.ib(converter=completion_check)
 
 
 @attr.s(auto_attribs=True)
 class TwistingTheHellmouthStory(Story):
     @staticmethod
-    def get_raw_text(page: Response) -> str:
-        """
-        Returns only the text of the chapter
-        """
-        soup = BeautifulSoup(page.content, "html5lib")
+    def get_raw_text(response: Response) -> str:
+        """Returns only the text of the chapter."""
+        soup = BeautifulSoup(response.content, "html5lib")
         div = soup.find("div", id="storyinnerbody")
         empty_div = div.find("div", style="clear:both;")
         empty_div.extract()
@@ -52,10 +59,7 @@ class TwistingTheHellmouthStory(Story):
         return "select#chapnav option"
 
     def make_title_page(self) -> None:
-        """
-        Parses the main page for information about the story and author.
-        """
-
+        """Parses the main page for information about the story and author."""
         _header = self.page.find("div", class_="storysummary formbody defaultcolors")
         _author = self.page.find("a", href=re.compile(r"^/AuthorStories"))
         _data = Header(
@@ -81,15 +85,14 @@ class TwistingTheHellmouthStory(Story):
         self.metadata.language = iso639.to_name(self.page.html["lang"])
         self.metadata.words = _data.words
         self.metadata.summary = _header.find_all("p")[-1].text
-        self.metadata.genres = None
         self.metadata.category = _data.category
-        self.metadata.tags = None
 
         self.metadata.characters = {"couples": None, "singles": None}
 
-    def make_new_chapter_url(self, url: furl, value: int) -> furl:
-        story_id = re.match(
-            r"Story-(?P<story>\d+)(-\d+)?", self.url.path.segments[0]
-        ).group("story")
-        url.path.segments[0] = f"Story-{story_id}-{value}"
-        return url
+    def make_new_chapter_url(self, url: furl, value: str) -> Optional[furl]:
+        story = re.match(r"Story-(?P<story>\d+)(-\d+)?", self.url.path.segments[0])
+        if story:
+            story_id = story.group("story")
+            url.path.segments[0] = f"Story-{story_id}-{value}"
+            return url
+        return None

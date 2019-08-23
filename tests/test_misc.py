@@ -1,7 +1,10 @@
 import pytest
 from pathlib import Path
+
+from furl import furl
+
 from pyffdl.utilities.misc import *
-from pyffdl.sites.ffnet import FanFictionNetStory
+from pyffdl.sites.ffnet import FanFictionNetStory, turn_into_dictionary
 
 
 def test_list2text():
@@ -13,22 +16,24 @@ def test_list2text():
 def test_turn_into_dictionary():
     story = FanFictionNetStory("https://www.fanfiction.net")
     with pytest.raises(TypeError):
-        story.turn_into_dictionary(7)
+        turn_into_dictionary(7)
     with pytest.raises(TypeError):
-        story.turn_into_dictionary([7])
+        turn_into_dictionary([7])
     with pytest.raises(TypeError):
-        story.turn_into_dictionary("Chapter: 7")
-    assert story.turn_into_dictionary(["English"]) == {"Language": "English"}
-    assert story.turn_into_dictionary(["Updated: 12.2.2019"]) == {"Updated": "12.2.2019"}
-    assert story.turn_into_dictionary(["Pages: 173"]) == {"Pages": 173}
-    assert story.turn_into_dictionary(["Harry, [Hermione, Ron]"]) == {'Characters': ['Harry', '[Hermione', 'Ron]']}
-    assert story.turn_into_dictionary(["Romance"]) == {'Genres': ['Romance']}
+        turn_into_dictionary("Chapter: 7")
+    assert turn_into_dictionary(["English"]) == {"Language": "English"}
+    assert turn_into_dictionary(["Updated: 12.2.2019"]) == {"Updated": "12.2.2019"}
+    assert turn_into_dictionary(["Pages: 173"]) == {}
+    assert turn_into_dictionary(["Harry, [Hermione, Ron]"]) == {
+        "Characters": {"couples": [["Hermione", "Ron"]], "singles": ["Harry"]}
+    }
+    assert turn_into_dictionary(["Romance"]) == {"Genres": ["Romance"]}
 
 
 @pytest.mark.parametrize(
     "filename,url",
     [
-        ("good_file.epub", "http://www.fanfiction.net/s/7954090/1/"),
+        ("good_file.epub", furl("http://www.fanfiction.net/s/7954090/1/")),
         ("bad_file.epub", None),
     ],
 )
