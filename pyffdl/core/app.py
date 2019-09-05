@@ -87,7 +87,7 @@ def cli_download(
 
 
 @cli.command(  # noqa: unused-function
-    "simple", help="Download a single story, using a list of chapter URLs."
+    "html", help="Download a single story, using a list of chapter URLs."
 )
 @click.option(
     "-f",
@@ -100,7 +100,7 @@ def cli_download(
 @click.option("-t", "--title", help="Title of the story", type=str, required=True)
 @click.option("-v", "--verbose", is_flag=True)
 @click.argument("url_list", nargs=-1)
-def cli_simple(
+def cli_html(
     from_file: click.File,
     author: str,
     title: str,
