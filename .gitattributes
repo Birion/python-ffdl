@@ -1,0 +1,2 @@
+pyffdl/__version__.py export-subst
+pyffdl/_version.py export-subst

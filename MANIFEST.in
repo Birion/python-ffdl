@@ -1,4 +1,6 @@
 include pyffdl/data/styles/style.css
 include pyffdl/data/font/*
 include pyffdl/data/covers/*
-include README.md
+include README.mdinclude versioneer.py
+include pyffdl/__version__.py
+include pyffdl/_version.py
