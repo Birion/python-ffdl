@@ -11,8 +11,6 @@ from shutil import rmtree
 
 from setuptools import find_packages, setup, Command
 
-import versioneer
-
 # Package meta-data.
 NAME = "pyffdl"
 DESCRIPTION = "Fanfiction download script"
@@ -53,7 +51,8 @@ with io.open(os.path.join(here, "README.md"), encoding="utf-8") as f:
 # Load the package's __version__.py module as a dictionary.
 about = {}
 if not VERSION:
-    about["__version__"] = versioneer.get_version()
+    with open(os.path.join(here, NAME, "__version__.py")) as f:
+        exec(f.read(), about)
 else:
     about["__version__"] = VERSION
 
