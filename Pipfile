@@ -4,10 +4,11 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-pre-commit = "*"
 jupyter = "*"
-pytest = "*"
+pre-commit = "*"
 prospector = {extras = ["with_mypy", "with_pyroma", "with_vulture"],version = "*"}
+pytest = "*"
+versioneer = "*"
 
 [packages]
 attrs = ">=19"

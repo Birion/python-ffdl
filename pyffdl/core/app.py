@@ -5,7 +5,7 @@ import attr
 import click
 from furl import furl  # type: ignore
 
-from pyffdl.__version__ import __version__
+from pyffdl._version import get_versions
 from pyffdl.sites import (
     AdultFanFictionStory,
     ArchiveOfOurOwnStory,
@@ -58,7 +58,7 @@ def download(urls: List[URL], verbose: bool = False, force: bool = False) -> Non
 
 
 @click.group()
-@click.version_option(version=__version__)
+@click.version_option(version=get_versions()["version"])
 def cli() -> None:
     pass
 
@@ -87,7 +87,7 @@ def cli_download(
 
 
 @cli.command(  # noqa: unused-function
-    "simple", help="Download a single story, using a list of chapter URLs."
+    "html", help="Download a single story, using a list of chapter URLs."
 )
 @click.option(
     "-f",
@@ -100,7 +100,7 @@ def cli_download(
 @click.option("-t", "--title", help="Title of the story", type=str, required=True)
 @click.option("-v", "--verbose", is_flag=True)
 @click.argument("url_list", nargs=-1)
-def cli_simple(
+def cli_html(
     from_file: click.File,
     author: str,
     title: str,
