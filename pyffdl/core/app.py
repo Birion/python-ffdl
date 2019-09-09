@@ -5,7 +5,7 @@ import attr
 import click
 from furl import furl  # type: ignore
 
-from pyffdl._version import get_versions
+from pyffdl.__version__ import __version__
 from pyffdl.sites import (
     AdultFanFictionStory,
     ArchiveOfOurOwnStory,
@@ -58,7 +58,7 @@ def download(urls: List[URL], verbose: bool = False, force: bool = False) -> Non
 
 
 @click.group()
-@click.version_option(version=get_versions()["version"])
+@click.version_option(version=__version__)
 def cli() -> None:
     pass
 
