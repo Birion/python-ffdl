@@ -104,3 +104,4 @@ ENV/
 /.envrc
 *.ipynb
 .mypy_cache/
+*.bck
