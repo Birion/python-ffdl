@@ -493,6 +493,8 @@ class Story:
             else:
                 text = get_text(title)
 
+            if isinstance(title, tuple):
+                title = title[-1]
             chapter = EpubHtml(
                 title=title,
                 file_name=f"chapter{chapter_number}.xhtml",

@@ -14,6 +14,7 @@ from pyffdl.utilities.misc import clean_text
 @attr.s(auto_attribs=True)
 class ArchiveOfOurOwnStory(Story):
     def _init(self):
+        self.url.path.segments = [x for x in self.url.path.segments if x != ""]
         if "chapters" not in self.url.path.segments:
             self.url.path.segments += ["chapters", "1"]
         if self.url.path.segments[-1] == "chapters":
@@ -123,6 +124,7 @@ class ArchiveOfOurOwnStory(Story):
         url.path.segments[-1] = value
         return url
 
-    @staticmethod
-    def chapter_cleanup(chapters: List[Any]) -> List[str]:
-        return [x[1] for x in chapters]
+    # @staticmethod
+    # def chapter_cleanup(chapters: List[Any]) -> List[str]:
+    #     print(chapters)
+    #     return [x[1] for x in chapters]
