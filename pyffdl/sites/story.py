@@ -35,6 +35,12 @@ class Author:
     url: furl = attr.ib(factory=furl, converter=furl)  # type: ignore
 
 
+@attr.s(auto_attribs=True)
+class Extra:
+    name: str
+    value: Union[int, str]
+
+
 @attr.s
 class Metadata:
     url: furl = attr.ib(factory=furl, converter=furl)  # type: ignore
@@ -46,7 +52,7 @@ class Metadata:
         self._published: date = pendulum.local(1970, 1, 1)
         self._updated: date = pendulum.local(1970, 1, 1)
         self._downloaded: date = pendulum.now()
-        self._language: str = ""
+        self._language: str = "English"
         self._category: str = ""
         self._genres: List[str] = []
         self._characters: List[str] = []
@@ -55,6 +61,7 @@ class Metadata:
         self._rating: str = ""
         self._tags: List[str] = []
         self._chapters: List[str] = []
+        self._extras: List[Extra] = []
 
     @property
     def title(self):
@@ -192,6 +199,14 @@ class Metadata:
         number_of_chapters = len(self._chapters) if self._complete else "??"
         return f"{len(self._chapters)}/{number_of_chapters}"
 
+    @property
+    def extras(self):
+        return self._extras
+
+    @extras.setter
+    def extras(self, value):
+        self._extras = value
+
 
 @attr.s
 class Datum:
@@ -259,6 +274,9 @@ class FrontPage:
             Datum(name="Tags", value=metadata.tags),
             Datum(name="Chapters", value=metadata.chapter_status),
         ]
+
+        for extra in metadata.extras:
+            story_data.append(Datum(name=extra.name, value=extra.value))
 
         return cls(metadata.title, metadata.author.name, story_data, metadata.summary)
 

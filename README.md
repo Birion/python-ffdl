@@ -23,10 +23,11 @@ The `html` command downloads a raw list of HTML files and collates them in an eb
 
 ## Supported sites
 
-* [adult-fanfiction.org](http://adult-fanfiction.org)
+* [adult-fanfiction.org](http://www.adult-fanfiction.org)
 * [archiveofourown.org](https://archiveofourown.org)
 * [fanfiction.net](https://fanfiction.net)
 * [fictionpress.com](https://fictionpress.com)
+* [tgstorytime.com](https://tgstorytime.com)
 * [tthfanfic.org](https://tthfanfic.org)
 
 ## TODO

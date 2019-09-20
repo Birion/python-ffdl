@@ -65,6 +65,7 @@ def clean_text(text: Union[List, Tuple, Set]) -> str:
         (r"\s+(</p>|</h\d>)", r"\1"),
         (r"\.\.+", "&hellip;"),
         (r"(<hr[^>]*>)\s*(.+)", r"\1\n\n<p>\2</p>"),
+        (r"\s+,", ","),
     ]
 
     for r, s in replacement_strings:
