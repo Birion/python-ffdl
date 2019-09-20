@@ -12,6 +12,7 @@ from pyffdl.sites import (
     FanFictionNetStory,
     HTMLStory,
     TwistingTheHellmouthStory,
+    TGStorytimeStory,
 )
 from pyffdl.utilities import get_url_from_file, list2text
 
@@ -21,6 +22,7 @@ AVAILABLE_SITES = {
     "adult-fanfiction.org": AdultFanFictionStory,
     "archiveofourown.org": ArchiveOfOurOwnStory,
     "tthfanfic.org": TwistingTheHellmouthStory,
+    "tgstorytime.com": TGStorytimeStory,
 }
 
 
