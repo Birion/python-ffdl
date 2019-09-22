@@ -39,7 +39,11 @@ class TGStorytimeStory(Story):
         """Parses the main page for information about the story and author."""  # noqa: D202
 
         def get_clean_text(header: Any, selector: str) -> str:
-            return header.select_one(selector).string.strip()
+            try:
+                return header.select_one(selector).string.strip()
+            except AttributeError:
+                return "\n".join(header.select_one(selector).stripped_strings)
+
 
         def process_content(header: Any) -> Dict[str, Union[str, int]]:
             _ = " ".join(
