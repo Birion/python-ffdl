@@ -1,13 +1,15 @@
 import re
-from typing import List, Optional, Tuple, Union, Any, Dict
+from typing import Any, Dict, Tuple, Union
+from sys import exit as sysexit
 
 import attr
 import pendulum  # type: ignore
-from bs4 import BeautifulSoup, Tag  # type: ignore
+from bs4 import BeautifulSoup  # type: ignore
+from bs4.element import Tag  # type: ignore
 from furl import furl  # type: ignore
 from requests import Response
 
-from pyffdl.sites.story import Story, Metadata, Extra
+from pyffdl.sites.story import Extra, Story
 from pyffdl.utilities.misc import clean_text
 
 
@@ -44,7 +46,6 @@ class TGStorytimeStory(Story):
             except AttributeError:
                 return "\n".join(header.select_one(selector).stripped_strings)
 
-
         def process_content(header: Any) -> Dict[str, Union[str, int]]:
             _ = " ".join(
                 str(x).strip()
@@ -58,16 +59,16 @@ class TGStorytimeStory(Story):
 
             data = {}
 
-            for content in _:
-                name, value = content.split(": ")
-                value = ", ".join(
+            for finding in _:
+                name, val = finding.split(": ")
+                val = ", ".join(
                     x
-                    for x in BeautifulSoup(value, "html5lib").stripped_strings
+                    for x in BeautifulSoup(val, "html5lib").stripped_strings
                     if x != ","
                 )
-                if value.isdigit():
-                    value = int(value)
-                data[name] = value
+                if val.isdigit():
+                    val = int(val)
+                data[name] = val
 
             return data
 
