@@ -1,9 +1,10 @@
 import re
-from typing import List, Optional, Tuple, Union, Any
+from typing import List, Optional, Tuple, Union
 
 import attr
 import pendulum  # type: ignore
-from bs4 import BeautifulSoup, Tag  # type: ignore
+from bs4 import BeautifulSoup  # type: ignore
+from bs4.element import Tag  # type: ignore
 from furl import furl  # type: ignore
 from requests import Response
 
