@@ -4,7 +4,8 @@ from typing import Dict, List, Union, Tuple, Optional
 import attr
 import iso639  # type: ignore
 import pendulum  # type: ignore
-from bs4 import BeautifulSoup, Tag  # type: ignore
+from bs4 import BeautifulSoup  # type: ignore
+from bs4.element import Tag  # type: ignore
 from furl import furl  # type: ignore
 from requests import Response
 
