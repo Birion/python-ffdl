@@ -2,11 +2,11 @@ import re
 from typing import Dict, List, Union, Tuple, Optional
 
 import attr
-import iso639  # type: ignore
-import pendulum  # type: ignore
-from bs4 import BeautifulSoup  # type: ignore
-from bs4.element import Tag  # type: ignore
-from furl import furl  # type: ignore
+import iso639
+import pendulum
+from bs4 import BeautifulSoup
+from bs4.element import Tag
+from furl import furl
 from requests import Response
 
 from pyffdl.sites.story import Story
@@ -18,10 +18,8 @@ Genres = List[str]
 ParseResult = Tuple[str, Union[str, int, Genres, Characters]]
 
 
-def turn_into_dictionary(  # noqa: MC0001
-    input_data: List[str]
-) -> Dict[str, Union[str, int, Genres, Characters]]:
-    """Transform a list with fic data into a dictionary."""  # noqa: D202
+def turn_into_dictionary(input_data: List[str]) -> Dict[str, Union[str, int, Genres, Characters]]:
+    """Transform a list with fic data into a dictionary."""
 
     def parse_data(datum: List[str]) -> Optional[ParseResult]:
         val: Optional[str]
@@ -85,7 +83,7 @@ def turn_into_dictionary(  # noqa: MC0001
         def parse_characters(chars: str) -> Characters:
             out_couples = []
             out_singles: List[str] = []
-            couples = re.compile(r"\[([^\[]+)\]")
+            couples = re.compile(r"\[([^\[]+)]")
             character_couples = couples.findall(chars)
 
             if character_couples:
@@ -108,7 +106,7 @@ def turn_into_dictionary(  # noqa: MC0001
 
     result_dictionary = {
         key: val
-        for key, val in [parse_data(x) for x in data if parse_data(x)]  # type: ignore
+        for key, val in [parse_data(x) for x in data if parse_data(x)]
     }
 
     return result_dictionary
@@ -131,10 +129,9 @@ class FanFictionNetStory(Story):
         return re.sub(r"\d+\.\s+", "", value.text)
 
     def make_title_page(self) -> None:
-        """Parses the main page for information about the story and author."""  # noqa: D202
+        """Parses the main page for information about the story and author."""
 
         def check_date(timestamp: int) -> pendulum.DateTime:
-            # noinspection PyTypeChecker
             return pendulum.from_timestamp(timestamp, "UTC") if timestamp else None
 
         header = self.page.find(id="profile_top")
@@ -146,20 +143,18 @@ class FanFictionNetStory(Story):
         _data = turn_into_dictionary(split(" ".join(tags), "-"))
 
         self.metadata.title = header.find("b").string
-        # pylint:disable=assigning-non-slot
         self.metadata.author.name = _author.string
-        # pylint:disable=assigning-non-slot
         self.metadata.author.url = self.url.copy().set(path=_author["href"])
         self.metadata.summary = header.find("div", class_="xcontrast_txt").string
         self.metadata.rating = _data.get("Rated")
         self.metadata.category = self.page.find(id="pre_story_links").find("a").string
-        self.metadata.genres = _data.get("Genres")
-        self.metadata.characters = _data.get("Characters")
+        self.metadata.genres.items = _data.get("Genres")
+        characters = _data.get("Characters")
+        self.metadata.characters.singles = characters["singles"]
+        self.metadata.characters.couples = characters["couples"]
         self.metadata.words = _data.get("Words")
-        # noinspection PyTypeHints
-        self.metadata.published = check_date(_data.get("Published"))  # type: ignore
-        # noinspection PyTypeHints
-        self.metadata.updated = check_date(_data.get("Updated"))  # type: ignore
+        self.metadata.published = check_date(_data.get("Published"))
+        self.metadata.updated = check_date(_data.get("Updated"))
         self.metadata.language = _data.get("Language")
         self.metadata.complete = _data.get("Status")
 

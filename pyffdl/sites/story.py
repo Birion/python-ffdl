@@ -1,8 +1,8 @@
 import re
-from datetime import date
 from io import BytesIO
 from pathlib import Path
-from sys import exit as sysexit
+
+import sys
 from typing import Any, ClassVar, Iterator, List, Optional, Tuple, Union
 from uuid import uuid4
 
@@ -23,16 +23,27 @@ from ebooklib.epub import (  # type: ignore
 )
 from furl import furl  # type: ignore
 from jinja2 import Environment, select_autoescape
+from pendulum import DateTime
 from requests import Response, Session
 
 from pyffdl.utilities.covers import Cover
 from pyffdl.utilities.misc import ensure_data, strlen
 
 
+def prepare_style(file: Path) -> EpubItem:
+    with file.open() as fp:
+        return EpubItem(
+            uid=file.stem,
+            file_name=f"style/{file.name}",
+            media_type="text/css",
+            content=fp.read(),
+        )
+
+
 @attr.s
 class Author:
     name: str = attr.ib(factory=str)
-    url: furl = attr.ib(factory=furl, converter=furl)  # type: ignore
+    url: furl = attr.ib(factory=furl, converter=furl)
 
 
 @attr.s(auto_attribs=True)
@@ -41,171 +52,70 @@ class Extra:
     value: Union[int, str]
 
 
+class MyDateTime(DateTime):
+    def __str__(self):
+        return self.to_iso8601_string()
+
+
 @attr.s
-class Metadata:
-    url: furl = attr.ib(factory=furl, converter=furl)  # type: ignore
+class Listing:
+    sep: str = attr.ib()
+    items: List[str] = attr.ib(default=attr.Factory(list))
 
-    def __attrs_post_init__(self):  # noqa: D105
-        self._title: str = ""
-        self._author: Author = Author("", furl(""))
-        self._complete: bool = False
-        self._published: date = pendulum.local(1970, 1, 1)
-        self._updated: date = pendulum.local(1970, 1, 1)
-        self._downloaded: date = pendulum.now()
-        self._language: str = "English"
-        self._category: str = ""
-        self._genres: List[str] = []
-        self._characters: List[str] = []
-        self._words: int = 0
-        self._summary: str = ""
-        self._rating: str = ""
-        self._tags: List[str] = []
-        self._chapters: List[str] = []
-        self._extras: List[Extra] = []
+    def __str__(self):
+        return self.sep.join(self.items) if self.items else ""
 
-    @property
-    def title(self):
-        return self._title
 
-    @title.setter
-    def title(self, value):
-        self._title = value
+@attr.s
+class Characters:
+    singles: List[str] = attr.ib(default=attr.Factory(list))
+    couples: List[str] = attr.ib(default=attr.Factory(list))
 
-    @property
-    def author(self):
-        return self._author
-
-    @author.setter
-    def author(self, value):
-        self._author = value
-
-    @property
-    def complete(self):
-        return self._complete
-
-    @complete.setter
-    def complete(self, value):
-        self._complete = value
-
-    @property
-    def published(self):
-        return self._published.to_iso8601_string() if self._published else None
-
-    @published.setter
-    def published(self, value):
-        self._published = value
-
-    @property
-    def updated(self):
-        return self._updated.to_iso8601_string() if self._updated else None
-
-    @updated.setter
-    def updated(self, value):
-        self._updated = value
-
-    @property
-    def downloaded(self):
-        return self._downloaded.to_iso8601_string() if self._downloaded else None
-
-    @downloaded.setter
-    def downloaded(self, value):
-        self._downloaded = value
-
-    @property
-    def language(self):
-        return self._language
-
-    @language.setter
-    def language(self, value):
-        self._language = value
-
-    @property
-    def category(self):
-        return self._category
-
-    @category.setter
-    def category(self, value):
-        self._category = value
-
-    @property
-    def genres(self):
-        return "/".join(self._genres) if self._genres else None
-
-    @genres.setter
-    def genres(self, value):
-        self._genres = value
-
-    @property
-    def characters(self):
+    def __str__(self):
+        c = self.singles or self.couples
         characters = ""
-        if self._characters and self._characters.get("couples"):
+        if c and self.couples:
             couples = [
-                "[" + ", ".join(x) + "]" for x in self._characters.get("couples")
+                "[" + ", ".join(x) + "]" for x in self.couples
             ]
             characters += " ".join(couples)
-            if self._characters.get("singles"):
+            if self.singles:
                 characters += " "
-        if self._characters and self._characters.get("singles"):
-            characters += ", ".join(self._characters.get("singles"))
+        if c and self.singles:
+            characters += ", ".join(self.singles)
 
-        return characters if characters else None
+        return characters if characters else ""
 
-    @characters.setter
-    def characters(self, value):
-        self._characters = value
 
-    @property
-    def words(self):
-        return self._words
+@attr.s
+class Metadata:
+    url: furl = attr.ib(factory=furl, converter=furl)
 
-    @words.setter
-    def words(self, value):
-        self._words = value
+    title: str = attr.ib(default="")
+    author: Author = attr.ib(default=Author("", furl("")))
+    complete: bool = attr.ib(default=False)
+    published: MyDateTime = attr.ib(default=pendulum.local(1970, 1, 1))
+    updated: MyDateTime = attr.ib(default=pendulum.local(1970, 1, 1))
+    downloaded: MyDateTime = attr.ib(default=pendulum.now())
+    language: str = attr.ib(default="English")
+    category: str = attr.ib(default="")
+    genres: Listing = attr.ib(default=Listing(sep="/"))
+    characters: Characters = attr.ib(default=Characters())
+    words: int = attr.ib(default=0)
+    summary: str = attr.ib(default="")
+    rating: str = attr.ib(default="")
+    tags: Listing = attr.ib(default=Listing(sep=", "))
+    chapters: List[str] = attr.ib(default=attr.Factory(list))
+    extras: List[Extra] = attr.ib(default=attr.Factory(list))
 
-    @property
-    def summary(self):
-        return self._summary
-
-    @summary.setter
-    def summary(self, value):
-        self._summary = value
-
-    @property
-    def rating(self):
-        return self._rating
-
-    @rating.setter
-    def rating(self, value):
-        self._rating = value
-
-    @property
-    def tags(self):
-        return ", ".join(self._tags) if self._tags else None
-
-    @tags.setter
-    def tags(self, value):
-        self._tags = value
-
-    @property
-    def chapters(self):
-        return self._chapters
-
-    @chapters.setter
-    def chapters(self, value):
-        self._chapters = value
+    @classmethod
+    def empty(cls):
+        return cls(furl())
 
     @property
     def chapter_status(self):
-        number_of_chapters = len(self._chapters) if self._complete else "??"
-        return f"{len(self._chapters)}/{number_of_chapters}"
-
-    @property
-    def extras(self):
-        return self._extras
-
-    @extras.setter
-    def extras(self, value):
-        self._extras = value
+        number_of_chapters = len(self.chapters) if self.complete else "??"
+        return f"{len(self.chapters)}/{number_of_chapters}"
 
 
 @attr.s
@@ -214,7 +124,7 @@ class Datum:
     value: Any = attr.ib()
     url: bool = attr.ib(default=False)
 
-    @property  # noqa: unused-variable
+    @property
     def id(self):
         return f"{self.name.lower()}-url" if self.url else self.name.lower()
 
@@ -225,6 +135,7 @@ class FrontPage:
     author: str = attr.ib()
     data: List[Datum] = attr.ib()
     summary: str = attr.ib()
+    env: Environment = attr.ib(default=Environment(autoescape=select_autoescape()))
 
     TEMPLATE = """
         {% macro is_url(data, url) %}
@@ -280,12 +191,9 @@ class FrontPage:
 
         return cls(metadata.title, metadata.author.name, story_data, metadata.summary)
 
-    def __attrs_post_init__(self):  # noqa: D105
-        self._env = Environment(autoescape=select_autoescape())
-
     @property
     def template(self):
-        return self._env.from_string(self.TEMPLATE)
+        return self.env.from_string(self.TEMPLATE)
 
     def render(self):
         return self.template.render(
@@ -296,37 +204,38 @@ class FrontPage:
 @attr.s()
 class Story:
     url: furl = attr.ib(
-        validator=attr.validators.instance_of(furl), converter=furl  # type: ignore
+        validator=attr.validators.instance_of(furl), converter=furl
     )
+
+    cover: bytes = attr.ib(default=b"")
+    verbose: bool = attr.ib(default=True)
+    force: bool = attr.ib(default=False)
+    session: Session = attr.ib(default=Session())
+    filename: str = attr.ib(default="")
+    metadata: Metadata = attr.ib(default=Metadata.empty())
+    book: EpubBook = attr.ib(default=EpubBook())
+    styles: List[EpubItem] = attr.ib(default=[])
+    page: BeautifulSoup = attr.ib(default=BeautifulSoup("", "lxml"))
+    data: Path = attr.ib(default=Path())
+
+    chapters: List[str] = attr.ib(default=attr.Factory(list))
+    author: str = attr.ib(default="")
+    title: str = attr.ib(default="")
 
     ILLEGAL_CHARACTERS: ClassVar = r'[<>:"/\|?]'
 
-    def __attrs_post_init__(self):  # noqa: D105
-        def prepare_style(file: Path) -> EpubItem:
-            with file.open() as fp:
-                return EpubItem(
-                    uid=file.stem,
-                    file_name=f"style/{file.name}",
-                    media_type="text/css",
-                    content=fp.read(),
-                )
+    def __attrs_post_init__(self):
 
-        self._filename = ""
-        self._verbose = True
-        self._force = False
-        self._metadata = Metadata(self.url)
-        self._session = Session()
-        self._book = EpubBook()
-        self._data_folder = ensure_data()
-        self._styles = [
+        self.metadata = Metadata(self.url)
+        self.data = ensure_data()
+        self.styles = [
             prepare_style(file) for file in (self.data / "styles").glob("*.css")
         ]
-        self._cover = None
 
-        main_page_request = self.session.get(self.url)
+        main_page_request = self.session.get(self.url.url)
         if not main_page_request.ok:
-            sysexit(1)
-        self._page = BeautifulSoup(main_page_request.content, "html5lib")
+            sys.exit(1)
+        self.page = BeautifulSoup(main_page_request.content, "html5lib")
 
         self._init()
 
@@ -360,76 +269,12 @@ class Story:
         self.make_ebook()
 
     @property
-    def styles(self) -> List[EpubItem]:
-        return self._styles
-
-    @property
     def select(self) -> str:
         return ""
 
     @property
     def is_adult(self) -> bool:
         return False
-
-    @property
-    def is_verbose(self) -> bool:
-        return self._verbose
-
-    @is_verbose.setter
-    def is_verbose(self, value):
-        self._verbose = value
-
-    @property
-    def filename(self):
-        return self._filename
-
-    @filename.setter
-    def filename(self, value):
-        self._filename = value
-
-    @property
-    def metadata(self):
-        return self._metadata
-
-    @property
-    def force(self):
-        return self._force
-
-    @force.setter
-    def force(self, value):
-        self._force = value
-
-    @property
-    def session(self):
-        return self._session
-
-    @property
-    def page(self):
-        return self._page
-
-    @page.setter
-    def page(self, value):
-        self._page = value
-
-    @property
-    def book(self):
-        return self._book
-
-    @book.setter
-    def book(self, value):
-        self._book = value
-
-    @property
-    def cover(self):
-        return self._cover
-
-    @cover.setter
-    def cover(self, value):
-        self._cover = value
-
-    @property
-    def data(self):
-        return self._data_folder
 
     @staticmethod
     def get_raw_text(response: Response) -> str:
@@ -440,10 +285,10 @@ class Story:
         """Processes the chapter titles to be stored in a usable format."""
 
     def log(self, text: str, force: bool = False):
-        if self.is_verbose:
+        if self.verbose:
             echo(text)
         if force:
-            if not self.is_verbose:
+            if not self.verbose:
                 echo(text)
             with open("pyffdl.log", "a") as fp:
                 echo(text, file=fp)
@@ -489,10 +334,12 @@ class Story:
             if not url:
                 return ""
             header = f"<h1>{chapter_title}</h1>"
-            raw_chapter = self.session.get(url)
+            raw_chapter = self.session.get(url.url)
             full_text = header + self.get_raw_text(raw_chapter)
+            cn = style(chapter_number, bold=True, fg='blue')
+            ct = style(chapter_title, fg='yellow')
             self.log(
-                f"Downloading chapter {style(chapter_number, bold=True, fg='blue')} - {style(chapter_title, fg='yellow')}"
+                f"Downloading chapter {cn} - {ct}"
             )
             return full_text
 

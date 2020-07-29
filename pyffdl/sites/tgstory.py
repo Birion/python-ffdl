@@ -18,7 +18,7 @@ class TGStorytimeStory(Story):
     def _init(self):
         if self.page.select_one(".bigblock .errormsg"):
             self.url.query.add({"ageconsent": "ok"})
-            main_page_request = self.session.get(self.url)
+            main_page_request = self.session.get(self.url.url)
             if not main_page_request.ok:
                 sysexit(1)
             self._page = BeautifulSoup(main_page_request.content, "html5lib")
@@ -38,7 +38,7 @@ class TGStorytimeStory(Story):
         return "select.textbox[name=chapter] option"
 
     def make_title_page(self) -> None:
-        """Parses the main page for information about the story and author."""  # noqa: D202
+        """Parses the main page for information about the story and author."""
 
         def get_clean_text(header: Any, selector: str) -> str:
             try:

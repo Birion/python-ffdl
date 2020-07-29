@@ -88,8 +88,6 @@ class TwistingTheHellmouthStory(Story):
         self.metadata.summary = _header.find_all("p")[-1].text
         self.metadata.category = _data.category
 
-        self.metadata.characters = {"couples": None, "singles": None}
-
     def make_new_chapter_url(self, url: furl, value: str) -> Optional[furl]:
         story = re.match(r"Story-(?P<story>\d+)(-\d+)?", self.url.path.segments[0])
         if story:

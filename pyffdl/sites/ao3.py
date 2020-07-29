@@ -105,7 +105,7 @@ class ArchiveOfOurOwnStory(Story):
         self.metadata.category = (
             ", ".join(find_class_multiple("fandom")) if _header else None
         )
-        self.metadata.tags = find_class_multiple("freeform") if _header else []
+        self.metadata.tags.items = find_class_multiple("freeform") if _header else []
 
         characters = find_class_multiple("character") if _header else []
         if characters:

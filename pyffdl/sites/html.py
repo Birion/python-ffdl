@@ -12,10 +12,6 @@ from pyffdl.utilities.misc import clean_text
 
 @attr.s(auto_attribs=True)
 class HTMLStory(Story):
-    chapters: List[str]
-    author: str
-    title: str
-
     @staticmethod
     def get_raw_text(response: Response) -> str:
         """Returns only the text of the chapter."""

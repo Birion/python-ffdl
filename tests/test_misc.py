@@ -61,3 +61,19 @@ def test_clean_text():
     assert clean_text(["foo", "bar"]) == "<p>foo bar</p>\n\n"
     assert clean_text(["fo o", "ba          r"]) == "<p>fo o ba r</p>\n\n"
     assert clean_text((" foo      ", " bar")) == "<p>foo bar</p>\n\n"
+
+
+def test_ensure_data():
+    assert ensure_data() == Path(click.get_app_dir("pyffdl"))
+
+
+def test_split():
+    assert split("foo,bar") == ["foo", "bar"]
+    assert split("foobar") == ["foobar"]
+    assert split("foo, bar") == ["foo", "bar"]
+    assert split("foo, bar", sep="/") == ["foo, bar"]
+    assert split("foo, bar/baz", sep="/") == ["foo, bar", "baz"]
+    with pytest.raises(TypeError):
+        split(0)
+    with pytest.raises(TypeError):
+        split(["foo, bar"])

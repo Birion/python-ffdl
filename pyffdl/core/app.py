@@ -39,8 +39,8 @@ def download(urls: List[URL], verbose: bool = False, force: bool = False) -> Non
         try:
             host = ".".join(url.url.host.split(".")[-2:])
             try:
-                Story = AVAILABLE_SITES[host]
-                story = Story(url.url)
+                storytype = AVAILABLE_SITES[host]
+                story = storytype(url.url)
                 story.is_verbose = verbose
                 story.force = force
                 if url.file:
@@ -83,7 +83,7 @@ def cli_download(
     urls = [URL(furl(x)) for x in url_list]
     if from_file:
         urls += [
-            URL(furl(x.strip("\n"))) for x in from_file.readlines()  # type: ignore
+            URL(furl(x.strip("\n"))) for x in from_file.readlines() if not x.startswith("#")
         ]
     download(urls, verbose)
 
@@ -112,7 +112,7 @@ def cli_html(
     urls = [URL(furl(x)) for x in url_list]
     if from_file:
         urls += [
-            URL(furl(x.strip("\n"))) for x in from_file.readlines()  # type: ignore
+            URL(furl(x.strip("\n"))) for x in from_file.readlines() if not x.startswith("#")
         ]
     if not urls:
         click.echo("You must provide at least one URL to download.")
@@ -123,7 +123,7 @@ def cli_html(
         title=title,
         url=furl("http://httpbin.org/status/200"),
     )
-    story.is_verbose = verbose
+    story.verbose = verbose
     story.run()
 
 

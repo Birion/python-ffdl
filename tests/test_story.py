@@ -1,8 +1,7 @@
 import pytest
 import requests
-from bs4 import BeautifulSoup
 
-from pyffdl.sites.story import Story
+from pyffdl.sites.story import *
 
 
 @pytest.mark.parametrize(
@@ -23,3 +22,8 @@ def test_check_setup(exception, url):
 def test_check_empty_setup():
     with pytest.raises(TypeError):
         story = Story()
+
+
+def test_prepare_style():
+    with pytest.raises(AttributeError):
+        prepare_style("style.css")

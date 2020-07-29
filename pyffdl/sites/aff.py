@@ -56,7 +56,7 @@ class AdultFanFictionStory(Story):
                     sys.exit(10)
                 _url = furl(url)
                 _url.args["page"] = page
-                r = get(_url)
+                r = get(_url.url)
                 q = BeautifulSoup(r.text, "html5lib")
                 data = q.find(string=title)
                 if not data:
@@ -88,7 +88,7 @@ class AdultFanFictionStory(Story):
         self.metadata.published = check_date(_published)
         self.metadata.updated = check_date(_updated)
         self.metadata.complete = "COMPLETE" in _tags or "Oneshot" in _tags
-        self.metadata.tags = _tags
+        self.metadata.tags.items = _tags
 
     def make_new_chapter_url(self, url: furl, value: str) -> furl:
         url.args["chapter"] = value

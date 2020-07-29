@@ -95,13 +95,14 @@ ENV/
 # Rope project settings
 .ropeproject
 
-/*.epub
-.idea/
-/bin/ffdl.py
-.pytest_cache/
-/ffdl.py
-/Pipfile.lock
-/.envrc
-*.ipynb
-.mypy_cache/
 *.bck
+*.ipynb
+.idea/
+.mypy_cache/
+.pytest_cache/
+/*.epub
+/.envrc
+/Pipfile.lock
+/bin/ffdl.py
+/ffdl.py
+/url
