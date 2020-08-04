@@ -17,9 +17,15 @@ The `html` command downloads a raw list of HTML files and collates them in an eb
 
 `pyffdl html --author <NAME> --title <TITLE> [--from <URL FILE>] [<CHAPTER URL>[ <CHAPTER URL>[...]]]`
 
+In `URL_FILE`, you can provide a list of URLs to download, one URL per line. Any lines starting with `#` will be ignored.
+
 ### Update an existing story file
 
 `pyffdl.py update [--force] [--backup] <EPUB FILE>`
+
+`--force` option completely redownloads the story, overwriting any changes you may have done to the epub file in the meantime.
+
+`--backup` option saves a copy of the current epub file before downloading any updates into a new file.
 
 ## Supported sites
 
@@ -35,3 +41,4 @@ The `html` command downloads a raw list of HTML files and collates them in an eb
 * better covers
     * by genres?
 * actually useful tests
+* figure out why the cover page is non-linear in .epub
