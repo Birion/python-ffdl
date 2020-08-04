@@ -125,8 +125,12 @@ class Datum:
     url: bool = attr.ib(default=False)
 
     @property
-    def id(self):
-        return f"{self.name.lower()}-url" if self.url else self.name.lower()
+    def id(self) -> str:
+        return re.sub(
+            r"url-url",
+            "url",
+            f"{self.name.lower()}-url" if self.url else self.name.lower()
+        ).replace(" ", "-").strip()
 
 
 @attr.s
