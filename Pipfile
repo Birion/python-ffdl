@@ -19,7 +19,7 @@ html5lib = ">1"
 iso639 = ">=0.1"
 jinja2 = ">=2.10"
 pendulum = ">=2"
-pillow = ">=6"
+pillow = ">=7.1"
 requests = ">=2"
 
 [requires]
