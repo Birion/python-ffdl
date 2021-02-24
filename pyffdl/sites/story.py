@@ -1,12 +1,13 @@
 import re
+import sys
 from io import BytesIO
 from pathlib import Path
-
-import sys
 from typing import Any, ClassVar, Iterator, List, Optional, Tuple, Union
 from uuid import uuid4
 
 import attr
+import click
+import cloudscraper
 import iso639  # type: ignore
 import pendulum  # type: ignore
 from bs4 import BeautifulSoup  # type: ignore
@@ -205,6 +206,15 @@ class FrontPage:
         )
 
 
+class SelfSession(cloudscraper.CloudScraper):
+
+    @classmethod
+    def new(cls):
+        s = Session()
+        session = cloudscraper.create_scraper(sess=s)
+        return session
+
+
 @attr.s()
 class Story:
     url: furl = attr.ib(
@@ -214,7 +224,7 @@ class Story:
     cover: bytes = attr.ib(default=b"")
     verbose: bool = attr.ib(default=True)
     force: bool = attr.ib(default=False)
-    session: Session = attr.ib(default=Session())
+    session: SelfSession = attr.ib(default=SelfSession())
     filename: str = attr.ib(default="")
     metadata: Metadata = attr.ib(default=Metadata.empty())
     book: EpubBook = attr.ib(default=EpubBook())
@@ -238,10 +248,15 @@ class Story:
 
         main_page_request = self.session.get(self.url.url)
         if not main_page_request.ok:
+            click.echo(f"I couldn't establish connection to {self.url}.\n{main_page_request.status_code}")
             sys.exit(1)
         self.page = BeautifulSoup(main_page_request.content, "html5lib")
 
         self._init()
+
+    @classmethod
+    def parse(cls, url, verbose, force):
+        return cls(url, verbose=verbose, force=force)
 
     def _init(self):
         pass

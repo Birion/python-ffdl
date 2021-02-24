@@ -17,7 +17,7 @@ DESCRIPTION = "Fanfiction download script"
 URL = "https://github.com/Birion/python-ffdl"
 EMAIL = "ondrej.vagner@gmail.com"
 AUTHOR = "Birion"
-REQUIRES_PYTHON = ">=3.6"
+REQUIRES_PYTHON = ">=3.8"
 VERSION = None
 
 # What packages are required for this module to be executed?
@@ -25,6 +25,7 @@ REQUIRED = [
     "attrs>=19",
     "beautifulsoup4>=4",
     "click>=7",
+    "cloudscraper>=1",
     "ebooklib>=0.17",
     "furl>=2",
     "html5lib>=1",

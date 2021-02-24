@@ -1,3 +1,4 @@
+@charset "UTF-8";
 body {
   margin: 0.5em;
   padding: 1em;
@@ -22,6 +23,7 @@ h1,
 h2,
 h3 {
   text-align: center;
+  margin: auto;
   font-variant: small-caps;
 }
 h1 + p, h1 + img + p,
@@ -37,6 +39,7 @@ img,
 .header,
 .center {
   text-align: center;
+  margin: auto;
 }
 hr + p,
 img + p,
@@ -60,6 +63,37 @@ img {
 
 .pagebreak {
   page-break-before: always;
+}
+
+.verse {
+  margin: 0.5em;
+}
+.verse + p {
+  text-indent: 0;
+}
+.verse .attribution {
+  text-align: right;
+}
+.verse .stanza {
+  margin: 0.5em auto;
+}
+.verse .indented-line {
+  text-indent: 1em;
+}
+
+.quotation {
+  margin: 0.5em;
+}
+.quotation .quote {
+  margin: 1em;
+  text-align: left;
+}
+.quotation .attribution {
+  text-align: right;
+  font-size: 100%;
+}
+.quotation .attribution:before {
+  content: "— ";
 }
 
 /*# sourceMappingURL=style.css.map */

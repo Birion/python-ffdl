@@ -7,7 +7,6 @@ verify_ssl = true
 pre-commit = "*"
 jupyter = "*"
 pytest = "*"
-prospector = {extras = ["with_mypy", "with_pyroma", "with_vulture"],version = "*"}
 
 [packages]
 attrs = ">=19"
@@ -21,6 +20,11 @@ jinja2 = ">=2.10"
 pendulum = ">=2"
 pillow = ">=7.1"
 requests = ">=2"
+cloudscraper = ">=1"
 
 [requires]
 python_version = "3.8"
+
+[dev-packages.prospector]
+extras = [ "with_mypy", "with_pyroma", "with_vulture",]
+version = "*"
