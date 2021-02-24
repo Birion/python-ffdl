@@ -1,9 +1,12 @@
 =center
   text-align: center
+  margin: auto
 
 =no-indent
   text-indent: 0
 
+=offset
+  margin: .5em
 
 body
   margin: 0.5em
@@ -11,7 +14,6 @@ body
   font:
     size: 1em
     family: 'Source Sans Pro', Helvetica, Arial, sans-serif
-
 
 p
   margin: auto
@@ -22,6 +24,7 @@ p
     +no-indent
 
 div
+
   p:nth-of-type(1)
     +no-indent
 
@@ -40,6 +43,7 @@ img,
 .header,
 .center
   +center
+
   & + p
     +no-indent
 
@@ -55,3 +59,34 @@ img
 
 .pagebreak
   page-break-before: always
+
+.verse
+  +offset
+
+  & + p
+    +no-indent
+
+  .attribution
+    text-align: right
+
+  .stanza
+    margin: 0.5em auto
+
+  .line
+
+  .indented-line
+    text-indent: 1em
+
+.quotation
+  +offset
+
+  .quote
+    margin: 1em
+    text-align: left
+
+  .attribution
+    text-align: right
+    font-size: 100%
+
+  .attribution:before
+    content: "— "

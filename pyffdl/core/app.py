@@ -39,10 +39,7 @@ def download(urls: List[URL], verbose: bool = False, force: bool = False) -> Non
         try:
             host = ".".join(url.url.host.split(".")[-2:])
             try:
-                storytype = AVAILABLE_SITES[host]
-                story = storytype(url.url)
-                story.is_verbose = verbose
-                story.force = force
+                story = AVAILABLE_SITES[host].parse(url.url, verbose, force)
                 if url.file:
                     story.filename = url.file
                 story.run()
