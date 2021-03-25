@@ -150,8 +150,8 @@ class FanFictionNetStory(Story):
         self.metadata.category = self.page.find(id="pre_story_links").find("a").string
         self.metadata.genres.items = _data.get("Genres")
         characters = _data.get("Characters")
-        self.metadata.characters.singles = characters["singles"]
-        self.metadata.characters.couples = characters["couples"]
+        self.metadata.characters.singles = characters.get("singles") if characters else None
+        self.metadata.characters.couples = characters.get("couples") if characters else None
         self.metadata.words = _data.get("Words")
         self.metadata.published = check_date(_data.get("Published"))
         self.metadata.updated = check_date(_data.get("Updated"))
