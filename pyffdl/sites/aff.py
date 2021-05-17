@@ -48,7 +48,12 @@ class AdultFanFictionStory(Story):
         def check_date(timestr: str) -> date:
             if not timestr:
                 return pendulum.from_timestamp(0, "local")
-            return pendulum.from_format(timestr, "MMMM D, YYYY", "local")
+            try:
+                return pendulum.from_format(timestr, "MMMM D, YYYY", "local")
+            except ValueError:
+                timestr = timestr.replace("am", "AM")
+                timestr = timestr.replace("pm", "PM")
+                return pendulum.from_format(timestr, "MMMM D, YYYY H:mm A", "local")
 
         def get_data(url: str, title: str, page: int = 1) -> list:
             while True:
