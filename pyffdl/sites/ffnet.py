@@ -71,9 +71,9 @@ def turn_into_dictionary(input_data: List[str]) -> Dict[str, Union[str, int, Gen
 
         val = key
 
-        lang = iso639.find(language=val)
+        lang = iso639.languages.get(part1=val)
         if lang:
-            return "Language", lang["name"]
+            return "Language", lang.name
 
         tmp = split(val, "/")
         for x in tmp:

@@ -394,7 +394,7 @@ class Story:
         book = EpubBook()
         book.set_identifier(str(uuid4()))
         book.set_title(self.metadata.title)
-        book.set_language(iso639.to_iso639_1(self.metadata.language))
+        book.set_language(iso639.languages.get(name=self.metadata.language).part1)
         book.add_author(self.metadata.author.name)
 
         nav = EpubNav()
