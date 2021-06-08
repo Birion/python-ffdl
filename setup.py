@@ -22,17 +22,17 @@ VERSION = None
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    "attrs>=19",
+    "attrs>=21",
     "beautifulsoup4>=4",
-    "click>=7",
+    "click>=8",
     "cloudscraper>=1",
     "ebooklib>=0.17",
     "furl>=2",
     "html5lib>=1",
-    "iso639>=0.1",
-    "jinja2>=2.10",
+    "iso-639>=0.4",
+    "jinja2>=3",
     "pendulum>=2",
-    "pillow>=7.1",
+    "pillow>=8.2",
     "requests>=2",
 ]
 DEPENDENCY = []

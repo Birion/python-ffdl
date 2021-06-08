@@ -66,7 +66,7 @@ class TwistingTheHellmouthStory(Story):
         _data = Header(
             *[
                 re.sub(r"\xa0", " ", x.text.strip())
-                for x in _header.table.find_all("tr")[-1].find_all("td")
+                for x in _header.select("tr:last-of-type td")
             ]
         )
 
@@ -83,7 +83,8 @@ class TwistingTheHellmouthStory(Story):
         self.metadata.published = _data.published
         if self.metadata.updated == self.metadata.published:
             self.metadata.updated = None
-        self.metadata.language = iso639.to_name(self.page.html["lang"])
+        lang = iso639.languages.get(part1=self.page.html["lang"])
+        self.metadata.language = lang.name
         self.metadata.words = _data.words
         self.metadata.summary = _header.find_all("p")[-1].text
         self.metadata.category = _data.category

@@ -100,9 +100,7 @@ ENV/
 .idea/
 .mypy_cache/
 .pytest_cache/
-/*.epub
+*.epub
 /.envrc
-/Pipfile.lock
-/bin/ffdl.py
-/ffdl.py
 /url
+/ffdl.py
