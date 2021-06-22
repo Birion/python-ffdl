@@ -2,7 +2,7 @@ import re
 from typing import Dict, List, Union, Tuple, Optional
 
 import attr
-import iso639
+import pycountry
 import pendulum
 from bs4 import BeautifulSoup
 from bs4.element import Tag
@@ -71,7 +71,7 @@ def turn_into_dictionary(input_data: List[str]) -> Dict[str, Union[str, int, Gen
 
         val = key
 
-        lang = iso639.languages.get(part1=val)
+        lang = pycountry.languages.get(name=val)
         if lang:
             return "Language", lang.name
 

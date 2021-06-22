@@ -38,15 +38,16 @@ def download(urls: List[URL], verbose: bool = False, force: bool = False) -> Non
             continue
         try:
             host = ".".join(url.url.host.split(".")[-2:])
-            try:
-                story = AVAILABLE_SITES[host].parse(url.url, verbose, force)
-                if url.file:
-                    story.filename = url.file
-                story.run()
-            except KeyError:
+            site = AVAILABLE_SITES.get(host)
+            if not site:
                 click.echo(
                     f"{__file__} is currently only able to download from {list2text(list(AVAILABLE_SITES.keys()))}."
                 )
+                return
+            story = site.parse(url.url, verbose, force)
+            if url.file:
+                story.filename = url.file
+            story.run()
         except AttributeError as e:
             raise e
             # print(e)

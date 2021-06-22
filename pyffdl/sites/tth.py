@@ -2,11 +2,11 @@ import re
 from typing import Optional
 
 import attr
-import iso639  # type: ignore
-import pendulum  # type: ignore
-from bs4 import BeautifulSoup  # type: ignore
-from bs4.element import Tag  # type: ignore
-from furl import furl  # type: ignore
+import pycountry
+import pendulum
+from bs4 import BeautifulSoup
+from bs4.element import Tag
+from furl import furl
 from requests import Response
 
 from pyffdl.sites.story import Story
@@ -83,7 +83,7 @@ class TwistingTheHellmouthStory(Story):
         self.metadata.published = _data.published
         if self.metadata.updated == self.metadata.published:
             self.metadata.updated = None
-        lang = iso639.languages.get(part1=self.page.html["lang"])
+        lang = pycountry.languages.get(alpha_2=self.page.html["lang"])
         self.metadata.language = lang.name
         self.metadata.words = _data.words
         self.metadata.summary = _header.find_all("p")[-1].text
