@@ -8,13 +8,13 @@ from uuid import uuid4
 import attr
 import click
 import cloudscraper
-import iso639  # type: ignore
-import pendulum  # type: ignore
-from bs4 import BeautifulSoup  # type: ignore
-from bs4.element import Tag  # type: ignore
+import pycountry
+import pendulum
+from bs4 import BeautifulSoup
+from bs4.element import Tag
 from click import echo, style
-from ebooklib import epub  # type: ignore
-from ebooklib.epub import (  # type: ignore
+from ebooklib import epub
+from ebooklib.epub import (
     EpubBook,
     EpubHtml,
     EpubItem,
@@ -22,7 +22,7 @@ from ebooklib.epub import (  # type: ignore
     EpubNcx,
     write_epub,
 )
-from furl import furl  # type: ignore
+from furl import furl
 from jinja2 import Environment, select_autoescape
 from pendulum import DateTime
 from requests import Response, Session
@@ -394,7 +394,7 @@ class Story:
         book = EpubBook()
         book.set_identifier(str(uuid4()))
         book.set_title(self.metadata.title)
-        book.set_language(iso639.languages.get(name=self.metadata.language).part1)
+        book.set_language(pycountry.languages.get(name=self.metadata.language).alpha_2)
         book.add_author(self.metadata.author.name)
 
         nav = EpubNav()

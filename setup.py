@@ -29,10 +29,10 @@ REQUIRED = [
     "ebooklib>=0.17",
     "furl>=2",
     "html5lib>=1",
-    "iso-639>=0.4",
     "jinja2>=3",
     "pendulum>=2",
     "pillow>=8.2",
+    "pycountry>=20",
     "requests>=2",
 ]
 DEPENDENCY = []
