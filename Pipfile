@@ -16,10 +16,10 @@ furl = ">=2"
 html5lib = ">1"
 jinja2 = ">=3"
 pendulum = ">=2"
-pillow = ">=8.2"
+pillow = ">=9.0.1"
 pycountry = ">=20"
 requests = ">=2"
 cloudscraper = ">=1"
 
 [requires]
-python_version = "3.8"
+python_version = "3.10"

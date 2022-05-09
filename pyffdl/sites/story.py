@@ -211,7 +211,7 @@ class SelfSession(cloudscraper.CloudScraper):
     @classmethod
     def new(cls):
         s = Session()
-        session = cloudscraper.create_scraper(sess=s)
+        session = cloudscraper.create_scraper(sess=s, browser="chrome", delay=10, debug=True)
         return session
 
 

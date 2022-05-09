@@ -17,7 +17,7 @@ DESCRIPTION = "Fanfiction download script"
 URL = "https://github.com/Birion/python-ffdl"
 EMAIL = "ondrej.vagner@gmail.com"
 AUTHOR = "Birion"
-REQUIRES_PYTHON = ">=3.8"
+REQUIRES_PYTHON = ">=3.10"
 VERSION = None
 
 # What packages are required for this module to be executed?
@@ -31,7 +31,7 @@ REQUIRED = [
     "html5lib>=1",
     "jinja2>=3",
     "pendulum>=2",
-    "pillow>=8.2",
+    "pillow>=9.0.1",
     "pycountry>=20",
     "requests>=2",
 ]
