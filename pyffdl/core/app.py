@@ -50,11 +50,6 @@ def download(urls: List[URL], verbose: bool = False, force: bool = False) -> Non
             story.run()
         except AttributeError as e:
             raise e
-            # print(e)
-            # error = "There were problems with parsing the URL."
-            # with open("pyffdl.log", "a") as fp:
-            #     click.echo(error, file=fp)
-            # click.echo(error, err=True)
 
 
 @click.group()

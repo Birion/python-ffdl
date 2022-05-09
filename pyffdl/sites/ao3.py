@@ -1,5 +1,5 @@
 import re
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
 import attr
 import pendulum  # type: ignore
@@ -8,13 +8,16 @@ from bs4.element import Tag  # type: ignore
 from furl import furl  # type: ignore
 from requests import Response
 
-from pyffdl.sites.story import Story
+from pyffdl.sites.story import Characters, Story
 from pyffdl.utilities.misc import clean_text
 
 
 @attr.s(auto_attribs=True)
 class ArchiveOfOurOwnStory(Story):
     def _init(self):
+        self.url.add({"view_adult": True})
+        main_page_request = self.session.get(self.url.url)
+        self.page = BeautifulSoup(main_page_request.content, "html5lib")
         self.url.path.segments = [x for x in self.url.path.segments if x != ""]
         if "chapters" not in self.url.path.segments:
             self.url.path.segments += ["chapters", "1"]
@@ -26,19 +29,13 @@ class ArchiveOfOurOwnStory(Story):
         """Returns only the text of the chapter."""
         soup = BeautifulSoup(response.content, "html5lib")
         return clean_text(
-            [
-                tag
-                for tag in soup.select_one("div.userstuff").select(
-                    "p, h1, h2, h3, h4, h5, h6, hr"
-                )
-                if isinstance(tag, Tag)
-                and tag.text != "Chapter Text"
-                and (
+            tag
+            for tag in soup.select_one("div.userstuff").select("p, h1, h2, h3, h4, h5, h6, hr")
+            if isinstance(tag, Tag) and tag.text != "Chapter Text" and (
                     "class" not in tag.attrs
                     or "class" in tag.attrs
                     and "title" not in tag["class"]
-                )
-            ]
+            )
         )
 
     @staticmethod
@@ -61,7 +58,7 @@ class ArchiveOfOurOwnStory(Story):
         def find_class_multiple(cls: str) -> List[str]:
             return get_strings(cls)
 
-        def find_class_single(cls: str) -> Union[str, None]:
+        def find_class_single(cls: str) -> Optional[str]:
             _strings = get_strings(cls)
             return _strings[0] if _strings else None
 
@@ -114,18 +111,13 @@ class ArchiveOfOurOwnStory(Story):
             couples = []
         _not_singles = {character for couple in couples for character in couple}
 
-        self.metadata.characters = {
-            "couples": couples,
-            "singles": [
+        self.metadata.characters = Characters(
+            couples=couples,
+            singles=[
                 character for character in characters if character not in _not_singles
-            ],
-        }
+            ]
+        )
 
     def make_new_chapter_url(self, url: furl, value: str) -> furl:
         url.path.segments[-1] = value
         return url
-
-    # @staticmethod
-    # def chapter_cleanup(chapters: List[Any]) -> List[str]:
-    #     print(chapters)
-    #     return [x[1] for x in chapters]
