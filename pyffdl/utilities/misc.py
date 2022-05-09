@@ -1,7 +1,7 @@
 import re
 import shutil
 from pathlib import Path
-from typing import List, Optional, Set, Tuple, Union
+from typing import Iterable, List, Optional, Union
 
 import click
 from bs4 import BeautifulSoup  # type: ignore
@@ -43,9 +43,7 @@ def strlen(data: list) -> int:
     return len(str(len(data)))
 
 
-def clean_text(text: Union[List, Tuple, Set]) -> str:
-    if not isinstance(text, (list, tuple, set)):
-        raise TypeError
+def clean_text(text: Iterable) -> str:
     raw_text = (
         "<p>" + " ".join(re.sub(r"\s+", " ", str(x).strip()) for x in text) + "</p>"
     )
