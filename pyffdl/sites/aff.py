@@ -19,8 +19,7 @@ class AdultFanFictionStory(Story):
         """Returns only the text of the chapter."""
         page = BeautifulSoup(sub(r"<p></p>", "</p><p>", response.text), "html5lib")
 
-        table = page("table")[2]
-        contents = table("tr")[5].td
+        contents = page.select_one("div#contentdata > ul > li:nth-of-type(7)")
 
         if contents("p"):
             return "".join(str(x) for x in contents("p"))
@@ -39,7 +38,7 @@ class AdultFanFictionStory(Story):
 
     @property
     def select(self) -> str:
-        return ".dropdown > .dropdown-content > a"
+        return ".dropdown-content > li > a"
 
     def make_title_page(self) -> None:
         """Parses the main page for information about the story and author."""  # noqa: D202
@@ -69,31 +68,20 @@ class AdultFanFictionStory(Story):
                 else:
                     return data.find_parent("tbody")("td")
 
-        _header = self.page("table")[2].table("td")
+        _header = self.page.select_one("table")("td")
         _author = _header[1].a
         _title = _header[0].string
         _category = _header[1]("a")[-1]["href"]
-        _data = get_data(_category, _title)
-        _headings = _data[1].get_text(strip=True).split("-:-")
-        _published = _data[0].get_text(strip=True).split(" : ")[-1]
-        _updated = _headings[0].split(" : ")[-1].strip()
-        _tags = _data[3].get_text(strip=True).split(":")[-1].split()
 
         self.metadata.title = _title
         # pylint:disable=assigning-non-slot
         self.metadata.author.name = _author.string
         # pylint:disable=assigning-non-slot
         self.metadata.author.url = _author["href"]
-        self.metadata.summary = _data[2].get_text(strip=True)
-        self.metadata.rating = _headings[1].strip().split(" : ")[-1]
         self.metadata.category = " ".join(
             [y.strip() for y in [x.string for x in _header[1].br.next_siblings][1:-2]]
         )
         self.metadata.language = "English"
-        self.metadata.published = check_date(_published)
-        self.metadata.updated = check_date(_updated)
-        self.metadata.complete = "COMPLETE" in _tags or "Oneshot" in _tags
-        self.metadata.tags.items = _tags
 
     def make_new_chapter_url(self, url: furl, value: str) -> furl:
         url.args["chapter"] = value

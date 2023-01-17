@@ -1,19 +1,14 @@
 import shutil
-from typing import List, Tuple, Optional
+import warnings
+from typing import Optional
 
 import attr
 import click
 from furl import furl  # type: ignore
 
 from pyffdl.__version__ import __version__
-from pyffdl.sites import (
-    AdultFanFictionStory,
-    ArchiveOfOurOwnStory,
-    FanFictionNetStory,
-    HTMLStory,
-    TwistingTheHellmouthStory,
-    TGStorytimeStory,
-)
+from pyffdl.sites import (AdultFanFictionStory, ArchiveOfOurOwnStory, FanFictionNetStory, HTMLStory, TGStorytimeStory,
+                          TwistingTheHellmouthStory)
 from pyffdl.utilities import get_url_from_file, list2text
 
 AVAILABLE_SITES = {
@@ -32,7 +27,7 @@ class URL:
     file: Optional[str] = attr.ib(default=None)
 
 
-def download(urls: List[URL], verbose: bool = False, force: bool = False) -> None:
+def download(urls: list[URL], verbose: bool = False, force: bool = False) -> None:
     for url in urls:
         if not url.url:
             continue
@@ -47,7 +42,9 @@ def download(urls: List[URL], verbose: bool = False, force: bool = False) -> Non
             story = site.parse(url.url, verbose, force)
             if url.file:
                 story.filename = url.file
-            story.run()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                story.run()
         except AttributeError as e:
             raise e
 
@@ -71,7 +68,7 @@ def cli() -> None:
 @click.option("-v", "--verbose", is_flag=True)
 @click.argument("url_list", nargs=-1)
 def cli_download(
-    from_file: click.File, url_list: Tuple[str, ...], verbose: bool = False
+        from_file: click.File, url_list: tuple[str, ...], verbose: bool = False
 ) -> None:
     urls = [URL(furl(x)) for x in url_list]
     if from_file:
@@ -96,11 +93,11 @@ def cli_download(
 @click.option("-v", "--verbose", is_flag=True)
 @click.argument("url_list", nargs=-1)
 def cli_html(
-    from_file: click.File,
-    author: str,
-    title: str,
-    url_list: Tuple[str, ...],
-    verbose: bool = False,
+        from_file: click.File,
+        author: str,
+        title: str,
+        url_list: tuple[str, ...],
+        verbose: bool = False,
 ):
     urls = [URL(furl(x)) for x in url_list]
     if from_file:
@@ -114,7 +111,7 @@ def cli_html(
         chapters=[x.url.tostr() for x in urls],
         author=author,
         title=title,
-        url=furl("http://httpbin.org/status/200"),
+        url=furl("https://httpbin.org/status/200"),
     )
     story.verbose = verbose
     story.run()
@@ -136,7 +133,7 @@ def cli_html(
 @click.option("-v", "--verbose", is_flag=True)
 @click.argument("filenames", type=click.Path(dir_okay=False, exists=True), nargs=-1)
 def cli_update(
-    force: bool, backup: bool, filenames: List[click.Path], verbose: bool = False
+        force: bool, backup: bool, filenames: list[click.Path], verbose: bool = False
 ) -> None:
     if backup:
         for filename in filenames:
