@@ -17,23 +17,23 @@ DESCRIPTION = "Fanfiction download script"
 URL = "https://github.com/Birion/python-ffdl"
 EMAIL = "ondrej.vagner@gmail.com"
 AUTHOR = "Birion"
-REQUIRES_PYTHON = ">=3.8"
+REQUIRES_PYTHON = ">=3.10"
 VERSION = None
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    "attrs>=21",
-    "beautifulsoup4>=4",
+    "attrs>=22",
+    "beautifulsoup4>=4.11",
     "click>=8",
     "cloudscraper>=1",
-    "ebooklib>=0.17",
+    "ebooklib>=0.18",
     "furl>=2",
     "html5lib>=1",
     "jinja2>=3",
     "pendulum>=2",
-    "pillow>=8.2",
-    "pycountry>=20",
-    "requests>=2",
+    "pillow>=9.4.0",
+    "pycountry>=22",
+    "requests>=2.28",
 ]
 DEPENDENCY = []
 
@@ -122,8 +122,7 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: Implementation :: CPython",
     ],
     # $ setup.py publish support.

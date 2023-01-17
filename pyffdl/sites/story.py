@@ -8,8 +8,8 @@ from uuid import uuid4
 import attr
 import click
 import cloudscraper
-import pycountry
 import pendulum
+import pycountry
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 from click import echo, style
@@ -211,7 +211,7 @@ class SelfSession(cloudscraper.CloudScraper):
     @classmethod
     def new(cls):
         s = Session()
-        session = cloudscraper.create_scraper(sess=s)
+        session = cloudscraper.create_scraper(sess=s, browser="chrome", delay=10, debug=True)
         return session
 
 
