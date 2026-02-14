@@ -63,6 +63,7 @@ class TwistingTheHellmouthStory(Story):
         """Parses the main page for information about the story and author."""
         _header = self.page.find("div", class_="storysummary formbody defaultcolors")
         _author = self.page.find("a", href=re.compile(r"^/AuthorStories"))
+        print(_header.select("tr:last-of-type td"))
         _data = Header(
             *[
                 re.sub(r"\xa0", " ", x.text.strip())

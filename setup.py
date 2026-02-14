@@ -17,23 +17,23 @@ DESCRIPTION = "Fanfiction download script"
 URL = "https://github.com/Birion/python-ffdl"
 EMAIL = "ondrej.vagner@gmail.com"
 AUTHOR = "Birion"
-REQUIRES_PYTHON = ">=3.10"
+REQUIRES_PYTHON = ">=3.14"
 VERSION = None
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    "attrs>=22",
-    "beautifulsoup4>=4.11",
-    "click>=8",
-    "cloudscraper>=1",
+    "attrs>=25.4",
+    "beautifulsoup4>=4.14",
+    "click>=8.3",
+    "cloudscraper>=1.2",
     "ebooklib>=0.18",
-    "furl>=2",
-    "html5lib>=1",
-    "jinja2>=3",
-    "pendulum>=2",
-    "pillow>=9.4.0",
-    "pycountry>=22",
-    "requests>=2.28",
+    "furl>=2.1",
+    "html5lib>=1.1",
+    "jinja2>=3.1",
+    "pendulum>=3.2",
+    "pillow>=12.1",
+    "pycountry>=24.6",
+    "requests>=2.32",
 ]
 DEPENDENCY = []
 
