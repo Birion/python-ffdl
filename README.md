@@ -1,8 +1,6 @@
 # python-ffdl
 Fanfiction downloader
 
-[![Build Status](https://travis-ci.org/Birion/python-ffdl.svg?branch=master)](https://travis-ci.org/Birion/python-ffdl)
-
 ## Installation
 
 `$ pip install git+ssh://git@github.com/Birion/python-ffdl.git@master`

@@ -15,7 +15,8 @@ class Title:
 
     @classmethod
     def from_text(cls, text, font):
-        return cls(text, *font.getsize_multiline(text))
+        l, t, r, b = font.getbbox(text)
+        return cls(text, r - l, b - t)
 
 
 @attr.s
